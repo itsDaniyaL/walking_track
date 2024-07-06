@@ -31,15 +31,18 @@ class _SignUpDescriptionPageState extends State<SignUpDescriptionPage> {
           child: Column(
         children: [
           SizedBox(
-              height: MediaQuery.of(context).size.height * 0.70,
+              height: MediaQuery.of(context).size.height * 0.65,
               width: MediaQuery.of(context).size.width * 0.75,
-              child: const Text(
-                  "Welcome to the free My Steps Walking Program, designed specifically to help PAD patients track their progress.\nPlease fill out the request form to join the program and a PAD Navigator will be in touch through phone or email to complete the process so we can send you a username and password")),
+              child: const Padding(
+                padding: EdgeInsets.only(top: 30.0),
+                child: Text(
+                    "Welcome to the free My Steps Walking Program, designed specifically to help PAD patients track their progress.\nPlease fill out the request form to join the program and a PAD Navigator will be in touch through phone or email to complete the process so we can send you a username and password"),
+              )),
           SizedBox(
             height: MediaQuery.of(context).size.height * 0.1,
             width: MediaQuery.of(context).size.width * 0.75,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 CustomFilledButton(
                   onPressed: () {

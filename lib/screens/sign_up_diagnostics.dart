@@ -5,6 +5,7 @@ import 'package:walking_track/shared/filled_button.dart';
 import 'package:walking_track/shared/switch_question.dart';
 import 'package:walking_track/shared/text_field.dart';
 import 'package:walking_track/shared/toggle_button.dart';
+import 'package:walking_track/utils/validators.dart';
 
 class SignUpDiagnosticsPage extends StatefulWidget {
   const SignUpDiagnosticsPage({super.key});
@@ -20,6 +21,13 @@ class _SignUpDiagnosticsPageState extends State<SignUpDiagnosticsPage> {
 
   String specialistFirstName = "";
   String specialistLastName = "";
+
+  bool validateForm() {
+    if (vascularSpecialist) {
+      return specialistFirstName.isNotEmpty && specialistLastName.isNotEmpty;
+    }
+    return true;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -38,7 +46,7 @@ class _SignUpDiagnosticsPageState extends State<SignUpDiagnosticsPage> {
           child: Column(
         children: [
           SizedBox(
-              height: MediaQuery.of(context).size.height * 0.70,
+              height: MediaQuery.of(context).size.height * 0.65,
               width: MediaQuery.of(context).size.width * 0.75,
               child: SingleChildScrollView(
                 child: Column(
@@ -59,33 +67,38 @@ class _SignUpDiagnosticsPageState extends State<SignUpDiagnosticsPage> {
                             vascularSpecialist = value;
                           });
                         }),
-                    CustomTextField(
-                      hintText: "Vascular Specialist’s First Name",
-                      onChanged: (text) {
-                        setState(() {
-                          specialistFirstName = text;
-                        });
-                      },
-                      prefixIcon: Icons.person_2_outlined,
-                    ),
-                    CustomTextField(
-                      hintText: "Vascular Specialist’s Last Name",
-                      onChanged: (text) {
-                        setState(() {
-                          specialistLastName = text;
-                        });
-                      },
-                      prefixIcon: Icons.person_2_outlined,
-                    ),
-                    SwitchQuestion(
-                        question:
-                            "Are you medically cleared to do a walking program?",
-                        switchState: clearForWalking,
-                        onChanged: (bool value) {
-                          setState(() {
-                            clearForWalking = value;
-                          });
-                        }),
+                    if (vascularSpecialist)
+                      Column(
+                        children: [
+                          CustomTextField(
+                            hintText: "Vascular Specialist’s First Name",
+                            onChanged: (text) {
+                              setState(() {
+                                specialistFirstName = text;
+                              });
+                            },
+                            prefixIcon: Icons.person_2_outlined,
+                          ),
+                          CustomTextField(
+                            hintText: "Vascular Specialist’s Last Name",
+                            onChanged: (text) {
+                              setState(() {
+                                specialistLastName = text;
+                              });
+                            },
+                            prefixIcon: Icons.person_2_outlined,
+                          ),
+                          SwitchQuestion(
+                              question:
+                                  "Are you medically cleared to do a walking program?",
+                              switchState: clearForWalking,
+                              onChanged: (bool value) {
+                                setState(() {
+                                  clearForWalking = value;
+                                });
+                              }),
+                        ],
+                      ),
                   ],
                 ),
               )),
@@ -93,10 +106,14 @@ class _SignUpDiagnosticsPageState extends State<SignUpDiagnosticsPage> {
             height: MediaQuery.of(context).size.height * 0.1,
             width: MediaQuery.of(context).size.width * 0.75,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 CustomFilledButton(
-                  onPressed: () => _dialogBuilder(context),
+                  onPressed: validateForm()
+                      ? () {
+                          _dialogBuilder(context);
+                        }
+                      : null,
                   // validateForm()
                   //     ? () {
                   //         authenticateUser();
@@ -182,6 +199,9 @@ class _SignUpDiagnosticsPageState extends State<SignUpDiagnosticsPage> {
           ],
         );
       },
-    );
+    ).then((value) => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const SignInPage()),
+        ));
   }
 }

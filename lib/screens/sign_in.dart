@@ -5,6 +5,7 @@ import 'package:walking_track/screens/sign_up_description.dart';
 import 'package:walking_track/shared/filled_button.dart';
 import 'package:walking_track/shared/text_field.dart';
 import 'package:walking_track/shared/toggle_button.dart';
+import 'package:walking_track/utils/validators.dart';
 
 class SignInPage extends StatefulWidget {
   const SignInPage({super.key});
@@ -14,14 +15,32 @@ class SignInPage extends StatefulWidget {
 }
 
 class _SignInPageState extends State<SignInPage> {
+  late String userNameText = "";
+  late String passwordText = "";
+
+  bool validateForm() {
+    return Validators.validatorUserName(userNameText) &&
+        Validators.validatorPassword(passwordText);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Sign In',
+          style: TextStyle(color: Colors.black),
+        ),
+        iconTheme: const IconThemeData(
+          color: Colors.black,
+        ),
+        backgroundColor: Colors.transparent,
+      ),
       body: Center(
           child: Column(
         children: [
           SizedBox(
-            height: MediaQuery.of(context).size.height * 0.40,
+            height: MediaQuery.of(context).size.height * 0.30,
             child: Align(
               alignment: Alignment.bottomCenter,
               child: Image(
@@ -37,56 +56,44 @@ class _SignInPageState extends State<SignInPage> {
                   CustomTextField(
                     hintText: "Username",
                     onChanged: (text) {
-                      // setState(() {
-                      //   emailText = text;
-                      // });
+                      setState(() {
+                        userNameText = text;
+                      });
                     },
                     prefixIcon: Icons.person_2_outlined,
+                    validator: Validators.validateUsernameField,
                   ),
                   CustomTextField(
                     hintText: "Password",
                     onChanged: (text) {
-                      // setState(() {
-                      //   passwordText = text;
-                      // });
+                      setState(() {
+                        passwordText = text;
+                      });
                     },
                     prefixIcon: Icons.lock_outline,
                     suffixIcon: Icons.visibility_outlined,
                     isPassword: true,
+                    validator: Validators.validatePasswordField,
                   ),
-                  // if (selectedMode == "sign_up")
-                  //   CustomTextField(
-                  //     hintText: "Confirm Password",
-                  //     onChanged: (text) {
-                  //       setState(() {
-                  //         confirmPasswordText = text;
-                  //       });
-                  //     },
-                  //     prefixIcon: Icons.lock,
-                  //     suffixIcon: Icons.visibility,
-                  //     isPassword: true,
-                  //   ),
                 ],
               )),
           SizedBox(
-            height: MediaQuery.of(context).size.height * 0.20,
+            height: MediaQuery.of(context).size.height * 0.15,
             width: MediaQuery.of(context).size.width * 0.75,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 CustomFilledButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const SignInNewUserPage()),
-                    );
-                  },
-                  // validateForm()
-                  //     ? () {
-                  //         authenticateUser();
-                  //       }
-                  //     : null,
+                  onPressed: validateForm()
+                      ? () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    const SignInNewUserPage()),
+                          );
+                        }
+                      : null,
                   textColor: Theme.of(context).secondaryHeaderColor,
                   buttonColor: Theme.of(context).primaryColorLight,
                   child: const Icon(Icons.arrow_forward_ios_rounded),
@@ -110,7 +117,7 @@ class _SignInPageState extends State<SignInPage> {
             ),
           ),
           SizedBox(
-            height: MediaQuery.of(context).size.height * 0.10,
+            height: MediaQuery.of(context).size.height * 0.1,
             width: MediaQuery.of(context).size.width * 0.75,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,

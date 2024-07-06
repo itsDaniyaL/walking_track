@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:walking_track/screens/sign_in.dart';
 import 'package:walking_track/screens/sign_up_user_info.dart';
+import 'package:walking_track/screens/six_minute_walking.dart';
 import 'package:walking_track/shared/filled_button.dart';
 import 'package:walking_track/shared/text_field.dart';
 import 'package:walking_track/shared/toggle_button.dart';
@@ -46,7 +47,7 @@ class _AllowPermissionsPageState extends State<AllowPermissionsPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const SignUpUserInfoPage()),
+                          builder: (context) => const SixMinuteWalkingPage()),
                     );
                   },
                   // validateForm()

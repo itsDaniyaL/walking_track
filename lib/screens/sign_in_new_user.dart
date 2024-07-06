@@ -32,65 +32,68 @@ class _SignInNewUserPageState extends State<SignInNewUserPage> {
           child: Column(
         children: [
           SizedBox(
-              height: MediaQuery.of(context).size.height * 0.70,
+              height: MediaQuery.of(context).size.height * 0.60,
               width: MediaQuery.of(context).size.width * 0.85,
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    const Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text("Please provide contact info")),
-                    CustomTextField(
-                      hintText: "Cell Phone Number",
-                      onChanged: (text) {
-                        // setState(() {
-                        //   emailText = text;
-                        // });
-                      },
-                      prefixIcon: Icons.call_outlined,
-                    ),
-                    CustomTextField(
-                      hintText: "Email",
-                      onChanged: (text) {
-                        // setState(() {
-                        //   emailText = text;
-                        // });
-                      },
-                      prefixIcon: Icons.email_outlined,
-                    ),
-                    const Align(
-                        alignment: Alignment.centerLeft,
-                        child: Text("Change Password")),
-                    CustomTextField(
-                      hintText: "Password",
-                      onChanged: (text) {
-                        // setState(() {
-                        //   emailText = text;
-                        // });
-                      },
-                      prefixIcon: Icons.lock_outline,
-                      suffixIcon: Icons.visibility_outlined,
-                      isPassword: true,
-                    ),
-                    CustomTextField(
-                      hintText: "Confirm Password",
-                      onChanged: (text) {
-                        // setState(() {
-                        //   emailText = text;
-                        // });
-                      },
-                      prefixIcon: Icons.lock_outline,
-                      suffixIcon: Icons.visibility_outlined,
-                      isPassword: true,
-                    ),
-                  ],
+              child: Padding(
+                padding: const EdgeInsets.only(top: 30.0),
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      const Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text("Please provide contact info")),
+                      CustomTextField(
+                        hintText: "Cell Phone Number",
+                        onChanged: (text) {
+                          // setState(() {
+                          //   emailText = text;
+                          // });
+                        },
+                        prefixIcon: Icons.call_outlined,
+                      ),
+                      CustomTextField(
+                        hintText: "Email",
+                        onChanged: (text) {
+                          // setState(() {
+                          //   emailText = text;
+                          // });
+                        },
+                        prefixIcon: Icons.email_outlined,
+                      ),
+                      const Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text("Change Password")),
+                      CustomTextField(
+                        hintText: "Password",
+                        onChanged: (text) {
+                          // setState(() {
+                          //   emailText = text;
+                          // });
+                        },
+                        prefixIcon: Icons.lock_outline,
+                        suffixIcon: Icons.visibility_outlined,
+                        isPassword: true,
+                      ),
+                      CustomTextField(
+                        hintText: "Confirm Password",
+                        onChanged: (text) {
+                          // setState(() {
+                          //   emailText = text;
+                          // });
+                        },
+                        prefixIcon: Icons.lock_outline,
+                        suffixIcon: Icons.visibility_outlined,
+                        isPassword: true,
+                      ),
+                    ],
+                  ),
                 ),
               )),
           SizedBox(
-            height: MediaQuery.of(context).size.height * 0.1,
+            height: MediaQuery.of(context).size.height * 0.15,
             width: MediaQuery.of(context).size.width * 0.75,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 CustomFilledButton(
                   onPressed: () {

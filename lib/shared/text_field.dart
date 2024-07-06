@@ -14,6 +14,7 @@ class CustomTextField extends StatefulWidget {
     this.padding,
     this.maxLines,
     required this.onChanged,
+    this.validator,
   });
 
   final String hintText;
@@ -26,6 +27,7 @@ class CustomTextField extends StatefulWidget {
   final IconData? suffixIcon;
   final bool? maxLines;
   final ValueChanged<String> onChanged;
+  final String? Function(String?)? validator;
 
   @override
   State<CustomTextField> createState() => _CustomTextFieldState();
@@ -34,6 +36,7 @@ class CustomTextField extends StatefulWidget {
 class _CustomTextFieldState extends State<CustomTextField> {
   late FocusNode _focusNode;
   final TextEditingController _controller = TextEditingController();
+  String? _errorText;
 
   @override
   void initState() {
@@ -45,6 +48,12 @@ class _CustomTextFieldState extends State<CustomTextField> {
   void dispose() {
     _focusNode.dispose();
     super.dispose();
+  }
+
+  void _validate() {
+    setState(() {
+      _errorText = widget.validator?.call(_controller.text);
+    });
   }
 
   @override
@@ -60,7 +69,10 @@ class _CustomTextFieldState extends State<CustomTextField> {
                 enabled: widget.disabled ?? false ? false : true,
                 controller: _controller,
                 focusNode: _focusNode,
-                onChanged: widget.onChanged,
+                onChanged: (text) {
+                  widget.onChanged(text);
+                  _validate();
+                },
                 obscureText: (widget.isPassword ?? false),
                 cursorColor: Theme.of(context).primaryColorLight,
                 maxLines: widget.maxLines != null ? 4 : 1,
@@ -81,7 +93,6 @@ class _CustomTextFieldState extends State<CustomTextField> {
                   floatingLabelStyle:
                       TextStyle(color: Theme.of(context).primaryColorLight),
                   helperStyle: const TextStyle(color: Colors.red),
-                  // hintStyle: const TextStyle(color: Colors.grey),
                   hintStyle: const TextStyle(color: Colors.black),
                   labelStyle: const TextStyle(color: Colors.black),
                   focusColor: Theme.of(context).primaryColorLight,
@@ -94,6 +105,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
                         BorderSide(color: Theme.of(context).primaryColorLight),
                     borderRadius: BorderRadius.circular(20.0),
                   ),
+                  errorText: _errorText,
                 ),
               ),
             ),
@@ -103,7 +115,6 @@ class _CustomTextFieldState extends State<CustomTextField> {
     );
   }
 }
-
 
 //Work on this later
 // suffixIcon: Visibility(
