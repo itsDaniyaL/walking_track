@@ -67,7 +67,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
                 style: TextStyle(
                     color: _focusNode.hasFocus
                         ? Theme.of(context).primaryColorLight
-                        : Colors.white),
+                        : Colors.black),
                 decoration: InputDecoration(
                   prefixIcon: CustomIcon(
                     icon: widget.prefixIcon,

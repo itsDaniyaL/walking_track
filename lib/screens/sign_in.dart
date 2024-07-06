@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:walking_track/screens/sign_up.dart';
+import 'package:walking_track/screens/sign_in_new_user.dart';
+import 'package:walking_track/screens/sign_up_description.dart';
 import 'package:walking_track/shared/filled_button.dart';
 import 'package:walking_track/shared/text_field.dart';
 import 'package:walking_track/shared/toggle_button.dart';
@@ -74,7 +75,13 @@ class _SignInPageState extends State<SignInPage> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 CustomFilledButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const SignInNewUserPage()),
+                    );
+                  },
                   // validateForm()
                   //     ? () {
                   //         authenticateUser();
@@ -128,7 +135,7 @@ class _SignInPageState extends State<SignInPage> {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const SignUpPage()),
+                          builder: (context) => const SignUpDescriptionPage()),
                     );
                   },
                   // validateForm()

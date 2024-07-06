@@ -15,10 +15,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+        debugShowCheckedModeBanner: false,
         title: 'Havoc',
         theme: ThemeData(
           primaryColorLight: const Color(0xFFF75555),
           secondaryHeaderColor: const Color(0xFFFFFFFF),
+          primaryColor: const Color(0xFF060171),
           useMaterial3: true,
           colorScheme: ColorScheme.fromSeed(seedColor: Colors.purple)
               .copyWith(error: const Color(0xFFAE0909)),

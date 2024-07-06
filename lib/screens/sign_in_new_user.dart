@@ -1,23 +1,26 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:walking_track/screens/allow_permissions.dart';
+import 'package:walking_track/screens/sign_in.dart';
+import 'package:walking_track/screens/sign_up_diagnostics.dart';
 import 'package:walking_track/shared/filled_button.dart';
 import 'package:walking_track/shared/text_field.dart';
 import 'package:walking_track/shared/toggle_button.dart';
 
-class SignUpPage extends StatefulWidget {
-  const SignUpPage({super.key});
+class SignInNewUserPage extends StatefulWidget {
+  const SignInNewUserPage({super.key});
 
   @override
-  State<SignUpPage> createState() => _SignUpPageState();
+  State<SignInNewUserPage> createState() => _SignInNewUserPageState();
 }
 
-class _SignUpPageState extends State<SignUpPage> {
+class _SignInNewUserPageState extends State<SignInNewUserPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'New User',
+          'New/Returning User',
           style: TextStyle(color: Colors.black),
         ),
         iconTheme: const IconThemeData(
@@ -30,35 +33,22 @@ class _SignUpPageState extends State<SignUpPage> {
         children: [
           SizedBox(
               height: MediaQuery.of(context).size.height * 0.70,
+              width: MediaQuery.of(context).size.width * 0.85,
               child: SingleChildScrollView(
                 child: Column(
                   children: [
+                    const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text("Please provide contact info")),
                     CustomTextField(
-                      hintText: "First Name",
+                      hintText: "Cell Phone Number",
                       onChanged: (text) {
                         // setState(() {
                         //   emailText = text;
                         // });
                       },
-                      prefixIcon: Icons.person_2_outlined,
+                      prefixIcon: Icons.call_outlined,
                     ),
-                    CustomTextField(
-                      hintText: "Last Name",
-                      onChanged: (text) {
-                        // setState(() {
-                        //   emailText = text;
-                        // });
-                      },
-                      prefixIcon: Icons.person_2_outlined,
-                    ),
-                    CustomTextField(
-                        hintText: "Cell Phone Number",
-                        onChanged: (text) {
-                          // setState(() {
-                          //   emailText = text;
-                          // });
-                        },
-                        prefixIcon: Icons.call_outlined),
                     CustomTextField(
                       hintText: "Email",
                       onChanged: (text) {
@@ -68,57 +58,48 @@ class _SignUpPageState extends State<SignUpPage> {
                       },
                       prefixIcon: Icons.email_outlined,
                     ),
+                    const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text("Change Password")),
                     CustomTextField(
-                      hintText: "City",
+                      hintText: "Password",
                       onChanged: (text) {
                         // setState(() {
                         //   emailText = text;
                         // });
                       },
+                      prefixIcon: Icons.lock_outline,
+                      suffixIcon: Icons.visibility_outlined,
+                      isPassword: true,
                     ),
                     CustomTextField(
-                      hintText: "State",
+                      hintText: "Confirm Password",
                       onChanged: (text) {
                         // setState(() {
                         //   emailText = text;
                         // });
                       },
-                    ),
-                    CustomTextField(
-                      hintText: "Province",
-                      onChanged: (text) {
-                        // setState(() {
-                        //   emailText = text;
-                        // });
-                      },
-                    ),
-                    CustomTextField(
-                      hintText: "Country",
-                      onChanged: (text) {
-                        // setState(() {
-                        //   emailText = text;
-                        // });
-                      },
-                    ),
-                    CustomTextField(
-                      hintText: "Postal Code",
-                      onChanged: (text) {
-                        // setState(() {
-                        //   emailText = text;
-                        // });
-                      },
+                      prefixIcon: Icons.lock_outline,
+                      suffixIcon: Icons.visibility_outlined,
+                      isPassword: true,
                     ),
                   ],
                 ),
               )),
           SizedBox(
-            height: MediaQuery.of(context).size.height * 0.08,
+            height: MediaQuery.of(context).size.height * 0.1,
             width: MediaQuery.of(context).size.width * 0.75,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 CustomFilledButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const AllowPermissionsPage()),
+                    );
+                  },
                   // validateForm()
                   //     ? () {
                   //         authenticateUser();
@@ -132,28 +113,25 @@ class _SignUpPageState extends State<SignUpPage> {
             ),
           ),
           SizedBox(
-            height: MediaQuery.of(context).size.height * 0.07,
+            height: MediaQuery.of(context).size.height * 0.1,
             width: MediaQuery.of(context).size.width * 0.75,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const SignUpPage()),
-                    );
-                  },
-                  child: const Text(
-                    "Already a user?",
-                    style: TextStyle(
-                      color: Colors.black,
-                    ),
+                const Text(
+                  "Already a user?",
+                  style: TextStyle(
+                    color: Colors.black,
                   ),
                 ),
                 CustomFilledButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const SignInPage()),
+                    );
+                  },
                   // validateForm()
                   //     ? () {
                   //         authenticateUser();

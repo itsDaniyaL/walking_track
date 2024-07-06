@@ -1,17 +1,19 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:walking_track/screens/sign_in.dart';
+import 'package:walking_track/screens/sign_up_diagnostics.dart';
 import 'package:walking_track/shared/filled_button.dart';
 import 'package:walking_track/shared/text_field.dart';
 import 'package:walking_track/shared/toggle_button.dart';
 
-class SignUpPage extends StatefulWidget {
-  const SignUpPage({super.key});
+class SignUpUserInfoPage extends StatefulWidget {
+  const SignUpUserInfoPage({super.key});
 
   @override
-  State<SignUpPage> createState() => _SignUpPageState();
+  State<SignUpUserInfoPage> createState() => _SignUpUserInfoPageState();
 }
 
-class _SignUpPageState extends State<SignUpPage> {
+class _SignUpUserInfoPageState extends State<SignUpUserInfoPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -112,13 +114,19 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
               )),
           SizedBox(
-            height: MediaQuery.of(context).size.height * 0.08,
+            height: MediaQuery.of(context).size.height * 0.1,
             width: MediaQuery.of(context).size.width * 0.75,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 CustomFilledButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const SignUpDiagnosticsPage()),
+                    );
+                  },
                   // validateForm()
                   //     ? () {
                   //         authenticateUser();
@@ -132,28 +140,25 @@ class _SignUpPageState extends State<SignUpPage> {
             ),
           ),
           SizedBox(
-            height: MediaQuery.of(context).size.height * 0.07,
+            height: MediaQuery.of(context).size.height * 0.1,
             width: MediaQuery.of(context).size.width * 0.75,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const SignUpPage()),
-                    );
-                  },
-                  child: const Text(
-                    "Already a user?",
-                    style: TextStyle(
-                      color: Colors.black,
-                    ),
+                const Text(
+                  "Already a user?",
+                  style: TextStyle(
+                    color: Colors.black,
                   ),
                 ),
                 CustomFilledButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const SignInPage()),
+                    );
+                  },
                   // validateForm()
                   //     ? () {
                   //         authenticateUser();
