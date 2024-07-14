@@ -1,11 +1,8 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:walking_track/screens/sign_in.dart';
 import 'package:walking_track/shared/filled_button.dart';
 import 'package:walking_track/shared/switch_question.dart';
 import 'package:walking_track/shared/text_field.dart';
-import 'package:walking_track/shared/toggle_button.dart';
-import 'package:walking_track/utils/validators.dart';
 
 class SignUpDiagnosticsPage extends StatefulWidget {
   const SignUpDiagnosticsPage({super.key});

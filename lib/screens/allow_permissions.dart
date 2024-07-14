@@ -1,11 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:walking_track/screens/sign_in.dart';
-import 'package:walking_track/screens/sign_up_user_info.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:walking_track/screens/six_minute_walking.dart';
 import 'package:walking_track/shared/filled_button.dart';
-import 'package:walking_track/shared/text_field.dart';
-import 'package:walking_track/shared/toggle_button.dart';
 
 class AllowPermissionsPage extends StatefulWidget {
   const AllowPermissionsPage({super.key});
@@ -32,7 +28,7 @@ class _AllowPermissionsPageState extends State<AllowPermissionsPage> {
           child: Column(
         children: [
           SizedBox(
-              height: MediaQuery.of(context).size.height * 0.70,
+              height: MediaQuery.of(context).size.height * 0.75,
               width: MediaQuery.of(context).size.width * 0.75,
               child: const Text(
                   "In order to monitor steps and keep you updated, the app requires access to certain permissions.\n\nPlease continue to provide access.")),
@@ -43,12 +39,8 @@ class _AllowPermissionsPageState extends State<AllowPermissionsPage> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 CustomFilledButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const SixMinuteWalkingPage()),
-                    );
+                  onPressed: () async {
+                    await _checkPermissions(context);
                   },
                   // validateForm()
                   //     ? () {
@@ -65,5 +57,58 @@ class _AllowPermissionsPageState extends State<AllowPermissionsPage> {
         ],
       )),
     );
+  }
+
+  Future<void> _checkPermissions(BuildContext context) async {
+    PermissionStatus notificationPermission =
+        await Permission.notification.status;
+    PermissionStatus activityPermission =
+        await Permission.activityRecognition.status;
+
+    if (notificationPermission.isGranted && activityPermission.isGranted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => SixMinuteWalkingPage(),
+        ),
+      );
+    } else {
+      // Request permissions if not granted
+      if (!notificationPermission.isGranted) {
+        notificationPermission = await Permission.notification.request();
+      }
+      if (!activityPermission.isGranted) {
+        activityPermission = await Permission.activityRecognition.request();
+      }
+
+      // After requesting, check again if permissions are granted
+      if (notificationPermission.isGranted && activityPermission.isGranted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => SixMinuteWalkingPage(),
+          ),
+        );
+      } else {
+        // Handle the case where permissions are not granted
+        // For example, show a dialog to inform the user
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('Permissions required'),
+            content: Text(
+                'Notification and physical activity permissions are required to proceed.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('OK'),
+              ),
+            ],
+          ),
+        );
+      }
+    }
   }
 }

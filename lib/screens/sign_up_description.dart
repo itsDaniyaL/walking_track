@@ -1,10 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:walking_track/screens/sign_in.dart';
 import 'package:walking_track/screens/sign_up_user_info.dart';
 import 'package:walking_track/shared/filled_button.dart';
-import 'package:walking_track/shared/text_field.dart';
-import 'package:walking_track/shared/toggle_button.dart';
 
 class SignUpDescriptionPage extends StatefulWidget {
   const SignUpDescriptionPage({super.key});
