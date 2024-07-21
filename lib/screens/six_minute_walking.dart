@@ -19,6 +19,10 @@ class _SixMinuteWalkingPageState extends State<SixMinuteWalkingPage> {
   bool _isWalking = false, _isTimerVisible = false, _areStepsVisible = false;
   Timer? _countupTimer;
   int _elapsedTime = 0;
+  String symptom = '';
+  DateTime? _startTime;
+  DateTime? _endTime;
+  List<DateTime> _restTimes = [];
 
   @override
   void initState() {
@@ -62,6 +66,7 @@ class _SixMinuteWalkingPageState extends State<SixMinuteWalkingPage> {
       _isWalking = true;
       _isTimerVisible = true;
       _areStepsVisible = true;
+      _startTime = DateTime.now(); // Save start time
     });
 
     _stepCountStream = Pedometer.stepCountStream;
@@ -84,9 +89,11 @@ class _SixMinuteWalkingPageState extends State<SixMinuteWalkingPage> {
         _timer =
             '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
 
-        if (_elapsedTime >= 10) {
+        if (_elapsedTime >= 5) {
+          // Change to 6 minutes (360 seconds)
           timer.cancel();
           _isWalking = false;
+          _endTime = DateTime.now(); // Save end time
           showSymptomsBottomSheet();
         }
       });
@@ -97,6 +104,7 @@ class _SixMinuteWalkingPageState extends State<SixMinuteWalkingPage> {
     _countupTimer?.cancel();
     setState(() {
       _isWalking = false;
+      _restTimes.add(DateTime.now()); // Save rest time
     });
   }
 
@@ -114,6 +122,11 @@ class _SixMinuteWalkingPageState extends State<SixMinuteWalkingPage> {
   }
 
   void showSymptomsBottomSheet() {
+    final String startTimeStr = _startTime?.toIso8601String() ?? '';
+    final String endTimeStr = _endTime?.toIso8601String() ?? '';
+    final String restTimesStr =
+        _restTimes.map((dt) => dt.toIso8601String()).join(', ');
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -134,13 +147,26 @@ class _SixMinuteWalkingPageState extends State<SixMinuteWalkingPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: CustomTextField(
                   hintText: "Add Symptom",
-                  onChanged: (text) {},
+                  onChanged: (text) {
+                    setState(() {
+                      symptom = text;
+                    });
+                  },
                 ),
               ),
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: CustomFilledButton(
                   onPressed: () {
+                    final Map<String, dynamic> data = {
+                      "username": "3135833708",
+                      "total_steps": _steps,
+                      "symptoms": symptom, // Update this based on user input
+                      "start_time": startTimeStr,
+                      "end_time": endTimeStr,
+                      "rest_time": restTimesStr
+                    };
+                    print(data); // Print or send the data
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -167,6 +193,7 @@ class _SixMinuteWalkingPageState extends State<SixMinuteWalkingPage> {
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
+        resizeToAvoidBottomInset: false,
         appBar: AppBar(
           title: const Text('6 Minute Walking Test'),
         ),

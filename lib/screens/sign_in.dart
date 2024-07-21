@@ -5,6 +5,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:walking_track/providers/user_data_provider.dart';
 import 'package:walking_track/screens/allow_permissions.dart';
+import 'package:walking_track/screens/preview_dashboard.dart';
 import 'package:walking_track/screens/sign_in_new_user.dart';
 import 'package:walking_track/screens/sign_up_description.dart';
 import 'package:walking_track/screens/six_minute_walking.dart';
@@ -113,6 +114,13 @@ class _SignInPageState extends State<SignInPage> {
                   CustomFilledButton(
                     onPressed: validateForm()
                         ? () async {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      const AllowPermissionsPage()),
+                            );
+                            return;
                             print("Checking");
                             final bool isNewUser = await checkNewUser(context);
 
@@ -151,11 +159,7 @@ class _SignInPageState extends State<SignInPage> {
                   ),
                   GestureDetector(
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const SignInPage()),
-                      );
+                      _forgotPasswordDialogBuilder(context);
                     },
                     child: Text(
                       "Forgot Password?",
@@ -212,6 +216,75 @@ class _SignInPageState extends State<SignInPage> {
           ],
         ),
       )),
+    );
+  }
+
+  Future<void> _forgotPasswordDialogBuilder(BuildContext context) {
+    late String usernameText = '';
+
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Forgot Password'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CustomTextField(
+                hintText: "Username",
+                onChanged: (text) {
+                  setState(() {
+                    usernameText = text;
+                  });
+                },
+              ),
+              const SizedBox(height: 10),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            CustomFilledButton(
+              onPressed: () async {
+                final changeStatus = true;
+                // await Provider.of<UserDataProvider>(context)
+                //     .forgotPassword(usernameText);
+                Navigator.of(context).pop();
+                if (changeStatus) {
+                  _showSuccessDialog(context);
+                }
+              },
+              textColor: Theme.of(context).secondaryHeaderColor,
+              buttonColor: Theme.of(context).primaryColorLight,
+              child: const Text('Submit'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showSuccessDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Success'),
+          content: Text('Password reset was successful. Check mail'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

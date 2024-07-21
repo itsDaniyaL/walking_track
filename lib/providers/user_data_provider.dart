@@ -15,11 +15,14 @@ class UserDataProvider with ChangeNotifier {
 
   Future<void> signIn(String username, String password) async {
     try {
-      final response = await ApiService().signIn(username, password);
-      final responseBody = await response.transform(utf8.decoder).join();
+      final apiService = ApiService();
+      final response = await apiService.signIn(username, password);
+
+      print('Response Status Code: ${response.statusCode}');
+      print('Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
-        final jsonResponse = jsonDecode(responseBody);
+        final jsonResponse = jsonDecode(response.body);
 
         if (jsonResponse['success'] == true) {
           final data = jsonResponse['data'];
@@ -66,5 +69,57 @@ class UserDataProvider with ChangeNotifier {
   Future<bool> isPasswordChanged() async {
     await loadUserData();
     return _userData?.passwordChanged == '1';
+  }
+
+  bool clearAccount() {
+    _userData = UserData(
+      fname: '',
+      lname: '',
+      phone: '',
+      email: '',
+      state: '',
+      province: '',
+      country: '',
+      diagnosed: '',
+      vSpecialist: '',
+      vFname: '',
+      vLname: '',
+      medicalClear: '',
+      active: '',
+      passwordChanged: '',
+      city: '',
+      postalCode: '',
+    );
+    return true;
+  }
+
+  Future<bool> closeAccount() async {
+    final apiService = ApiService();
+    await apiService.closeAccount(_userData!.phone);
+    return true;
+  }
+
+  Future<bool> changePassword(password) async {
+    final apiService = ApiService();
+    final userName = passwordChanged;
+
+    if (userName != null) {
+      final response = await apiService.changePassword(userName, password);
+
+      if (response.statusCode == 200) {
+        final jsonResponse = jsonDecode(response.body);
+
+        if (jsonResponse['success'] == true) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  Future<bool> forgotPassword(username) async {
+    final apiService = ApiService();
+    await apiService.forgotPassword(username);
+    return true;
   }
 }

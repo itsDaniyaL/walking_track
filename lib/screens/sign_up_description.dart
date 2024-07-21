@@ -14,6 +14,7 @@ class _SignUpDescriptionPageState extends State<SignUpDescriptionPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text(
           'New User',

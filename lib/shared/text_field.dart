@@ -39,11 +39,13 @@ class _CustomTextFieldState extends State<CustomTextField> {
   late FocusNode _focusNode;
   final TextEditingController _controller = TextEditingController();
   String? _errorText;
+  bool _obscureText = true;
 
   @override
   void initState() {
     super.initState();
     _focusNode = FocusNode();
+    _obscureText = widget.isPassword ?? false;
   }
 
   @override
@@ -55,6 +57,12 @@ class _CustomTextFieldState extends State<CustomTextField> {
   void _validate() {
     setState(() {
       _errorText = widget.validator?.call(_controller.text);
+    });
+  }
+
+  void _togglePasswordVisibility() {
+    setState(() {
+      _obscureText = !_obscureText;
     });
   }
 
@@ -76,23 +84,34 @@ class _CustomTextFieldState extends State<CustomTextField> {
                   widget.onChanged(text);
                   _validate();
                 },
-                obscureText: (widget.isPassword ?? false),
+                obscureText: widget.isPassword == true ? _obscureText : false,
                 cursorColor: Theme.of(context).primaryColorLight,
                 maxLines: widget.maxLines != null ? 4 : 1,
                 style: TextStyle(
-                    color: _focusNode.hasFocus
-                        ? Theme.of(context).primaryColorLight
-                        : Colors.black),
+                  color: _focusNode.hasFocus
+                      ? Theme.of(context).primaryColorLight
+                      : Colors.black,
+                ),
                 decoration: InputDecoration(
                   counterText: '',
                   prefixIcon: CustomIcon(
                     icon: widget.prefixIcon,
                     iconColor: Colors.black,
                   ),
-                  suffixIcon: CustomIcon(
-                    icon: widget.suffixIcon,
-                    iconColor: Colors.black,
-                  ),
+                  suffixIcon: widget.isPassword == true
+                      ? GestureDetector(
+                          onTap: _togglePasswordVisibility,
+                          child: CustomIcon(
+                            icon: _obscureText
+                                ? Icons.visibility_outlined
+                                : Icons.visibility_off_outlined,
+                            iconColor: Colors.black,
+                          ),
+                        )
+                      : CustomIcon(
+                          icon: widget.suffixIcon,
+                          iconColor: Colors.black,
+                        ),
                   labelText: widget.hintText,
                   floatingLabelStyle:
                       TextStyle(color: Theme.of(context).primaryColorLight),
@@ -119,11 +138,3 @@ class _CustomTextFieldState extends State<CustomTextField> {
     );
   }
 }
-
-//Work on this later
-// suffixIcon: Visibility(
-//                     visible: _controller.text.isNotEmpty,
-//                     child: IconButton(
-//                         icon: const Icon(Icons.clear),
-//                         onPressed: () => _controller.text = ""),
-//                   ),

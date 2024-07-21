@@ -11,16 +11,24 @@ import 'package:walking_track/screens/allow_permissions.dart';
 import 'package:walking_track/screens/sign_in.dart';
 import 'package:walking_track/screens/sign_in_new_user.dart';
 import 'package:walking_track/screens/six_minute_walking.dart';
+import 'package:walking_track/screens/walking_workout.dart';
 
-Future main() async {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
   await dotenv.load(fileName: ".env");
 
   final userDataProvider = UserDataProvider();
   await userDataProvider.loadUserData();
 
+  // Set preferred orientations to portrait only
+  await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.black,
-      systemNavigationBarColor: Colors.transparent));
+    statusBarColor: Colors.black,
+    systemNavigationBarColor: Colors.transparent,
+  ));
+
   runApp(
     MultiProvider(
       providers: [
@@ -30,6 +38,21 @@ Future main() async {
       child: const MyApp(),
     ),
   );
+
+  const MethodChannel platform = MethodChannel('com.example.walking_tracker');
+
+  platform.setMethodCallHandler((MethodCall call) async {
+    switch (call.method) {
+      case 'rest_action':
+        // Call rest() method
+        break;
+      case 'continue_action':
+        // Call continueWalking() method
+        break;
+      default:
+        throw MissingPluginException('not implemented');
+    }
+  });
 }
 
 class MyApp extends StatelessWidget {
@@ -99,7 +122,7 @@ class MyApp extends StatelessWidget {
                         }
                       }
 
-                      return const SignInPage(); // Fallback in case of error
+                      return const SignInPage();
                     },
                   );
                 } else {

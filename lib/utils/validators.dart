@@ -79,8 +79,8 @@ class Validators {
     if (value == null || value.isEmpty) {
       return 'Password is required';
     }
-    if (value.length <= 8) {
-      return 'Must include atleast 8+ characters';
+    if (value.length < 8) {
+      return 'Must include atleast 7+ characters';
     }
     return null;
   }

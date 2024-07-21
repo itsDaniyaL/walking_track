@@ -1,26 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:walking_track/providers/user_data_provider.dart';
-import 'package:walking_track/screens/preview_dashboard.dart';
+import 'package:walking_track/screens/main_dashboard.dart';
 import 'package:walking_track/screens/sign_in.dart';
 import 'package:walking_track/screens/walking_workout.dart';
 import 'package:walking_track/screens/change_password.dart';
 import 'package:walking_track/shared/filled_button.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:walking_track/shared/text_field.dart';
-import 'package:walking_track/utils/validators.dart';
 
-class MainDashboardPage extends StatefulWidget {
-  const MainDashboardPage({super.key});
+class PreviewDashboardPage extends StatefulWidget {
+  const PreviewDashboardPage({super.key});
 
   @override
-  State<MainDashboardPage> createState() => _MainDashboardPageState();
+  State<PreviewDashboardPage> createState() => _PreviewDashboardPageState();
 }
 
-class _MainDashboardPageState extends State<MainDashboardPage> {
-  String passwordText = '';
-  String confirmPasswordText = '';
-
+class _PreviewDashboardPageState extends State<PreviewDashboardPage> {
   void _showLeftMenu() {
     showModalBottomSheet(
       context: context,
@@ -130,7 +125,7 @@ class _MainDashboardPageState extends State<MainDashboardPage> {
         centerTitle: true,
         automaticallyImplyLeading: false,
         title: const Text(
-          'Main Dashboard',
+          'Preview Dashboard',
           style: TextStyle(color: Colors.black),
         ),
         iconTheme: const IconThemeData(
@@ -154,52 +149,140 @@ class _MainDashboardPageState extends State<MainDashboardPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              CustomFilledButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => WalkingWorkoutPage()),
-                  );
-                },
-                width: 150,
-                height: 150,
-                buttonColor: const Color(0xFF554EEB),
-                borderRadius: BorderRadius.circular(60),
-                child: const Text(
-                  "Walking\nWorkout",
-                  textAlign: TextAlign.center,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  CustomFilledButton(
+                    onPressed: () {},
+                    width: 150,
+                    height: 150,
+                    buttonColor: const Color(0xFF554EEB),
+                    borderRadius: BorderRadius.circular(60),
+                    child: const Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "4 min 22 sec",
+                          style: TextStyle(fontSize: 20),
+                        ),
+                        Text(
+                          "Caludication\nTime",
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                  CustomFilledButton(
+                    onPressed: () {},
+                    width: 150,
+                    height: 150,
+                    buttonColor: const Color(0xFF554EEB),
+                    borderRadius: BorderRadius.circular(60),
+                    child: const Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "4 min 22 sec",
+                          style: TextStyle(fontSize: 20),
+                        ),
+                        Text(
+                          "Walk to Rest",
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              CustomFilledButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const PreviewDashboardPage()),
-                  );
-                },
-                width: 150,
-                height: 150,
-                buttonColor: const Color(0xFF554EEB),
-                borderRadius: BorderRadius.circular(60),
-                child: const Text(
-                  "Review\nDashboard",
-                  textAlign: TextAlign.center,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  CustomFilledButton(
+                    onPressed: () {},
+                    width: 150,
+                    height: 150,
+                    buttonColor: const Color(0xFF554EEB),
+                    borderRadius: BorderRadius.circular(60),
+                    child: const Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "4 min 22 sec",
+                          style: TextStyle(fontSize: 20),
+                        ),
+                        Text(
+                          "Walk no Rest",
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                  CustomFilledButton(
+                    onPressed: () {},
+                    width: 150,
+                    height: 150,
+                    buttonColor: const Color(0xFF554EEB),
+                    borderRadius: BorderRadius.circular(60),
+                    child: const Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "4 min 22 sec",
+                          style: TextStyle(fontSize: 20),
+                        ),
+                        Text(
+                          "Time at Rest",
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-              CustomFilledButton(
-                onPressed: () {
-                  _dialogBuilder(context);
-                },
-                width: 150,
-                height: 150,
-                buttonColor: const Color(0xFF554EEB),
-                borderRadius: BorderRadius.circular(60),
-                child: const Text(
-                  "Community\nSupport",
-                  textAlign: TextAlign.center,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  CustomFilledButton(
+                    onPressed: () {},
+                    width: 150,
+                    height: 150,
+                    buttonColor: const Color(0xFF554EEB),
+                    borderRadius: BorderRadius.circular(60),
+                    child: const Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "4 min 22 sec",
+                          style: TextStyle(fontSize: 20),
+                        ),
+                        Text(
+                          "Actual Walking",
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                  CustomFilledButton(
+                    onPressed: () {},
+                    width: 150,
+                    height: 150,
+                    buttonColor: const Color(0xFF554EEB),
+                    borderRadius: BorderRadius.circular(60),
+                    child: const Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "4 min 22 sec",
+                          style: TextStyle(fontSize: 20),
+                        ),
+                        Text(
+                          "Total Steps",
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -252,70 +335,6 @@ class _MainDashboardPageState extends State<MainDashboardPage> {
               onPressed: () {
                 Navigator.pop(context);
               },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> _changePasswordDialogBuilder(BuildContext context) {
-    return showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Change Password'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CustomTextField(
-                hintText: "Password",
-                onChanged: (text) {
-                  setState(() {
-                    passwordText = text;
-                  });
-                },
-                prefixIcon: Icons.lock_outline,
-                suffixIcon: Icons.visibility_outlined,
-                isPassword: true,
-                validator: Validators.validatePasswordField,
-              ),
-              const SizedBox(height: 10),
-              CustomTextField(
-                hintText: "Confirm Password",
-                onChanged: (text) {
-                  setState(() {
-                    confirmPasswordText = text;
-                  });
-                },
-                prefixIcon: Icons.lock_outline,
-                suffixIcon: Icons.visibility_outlined,
-                isPassword: true,
-                validator: (value) {
-                  if (value != passwordText) {
-                    return 'Passwords do not match';
-                  }
-                  return Validators.validatePasswordField(value);
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (Validators.validatePasswordField(passwordText) == null &&
-                    passwordText == confirmPasswordText) {
-                  // Proceed with password change logic
-                  Navigator.of(context).pop();
-                }
-              },
-              child: const Text('Change Password'),
             ),
           ],
         );

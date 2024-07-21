@@ -14,6 +14,7 @@ class _AllowPermissionsPageState extends State<AllowPermissionsPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         title: const Text(
           'Allow Permissions',
@@ -42,11 +43,6 @@ class _AllowPermissionsPageState extends State<AllowPermissionsPage> {
                   onPressed: () async {
                     await _checkPermissions(context);
                   },
-                  // validateForm()
-                  //     ? () {
-                  //         authenticateUser();
-                  //       }
-                  //     : null,
                   textColor: Theme.of(context).secondaryHeaderColor,
                   buttonColor: Theme.of(context).primaryColorLight,
                   child: const Icon(Icons.arrow_forward_ios_rounded),

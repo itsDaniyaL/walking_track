@@ -123,72 +123,36 @@ class _SignInNewUserPageState extends State<SignInNewUserPage> {
                   CustomFilledButton(
                     onPressed: validateForm()
                         ? () async {
-                            final apiService = ApiService();
-                            final userName = Provider.of<UserDataProvider>(
-                                    context,
-                                    listen: false)
-                                .phone;
-
-                            if (userName != null) {
-                              final response = await apiService.changePassword(
-                                  userName, password);
-
-                              if (response.statusCode == 200) {
-                                final jsonResponse = jsonDecode(response.body);
-
-                                if (jsonResponse['success'] == true) {
-                                  // Password change successful, navigate to the next page
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          const AllowPermissionsPage(),
-                                    ),
+                            final bool changeStatus =
+                                await Provider.of<UserDataProvider>(context)
+                                    .changePassword(password);
+                            if (changeStatus) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const AllowPermissionsPage(),
+                                ),
+                              );
+                            } else {
+                              showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: const Text('Password Change Failed'),
+                                    content:
+                                        const Text('Unknown error occurred'),
+                                    actions: [
+                                      TextButton(
+                                        child: const Text('OK'),
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                      ),
+                                    ],
                                   );
-                                } else {
-                                  // Password change failed, show a dialog
-                                  showDialog(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return AlertDialog(
-                                        title: const Text(
-                                            'Password Change Failed'),
-                                        content: Text(jsonResponse['message'] ??
-                                            'Unknown error occurred'),
-                                        actions: [
-                                          TextButton(
-                                            child: const Text('OK'),
-                                            onPressed: () {
-                                              Navigator.of(context).pop();
-                                            },
-                                          ),
-                                        ],
-                                      );
-                                    },
-                                  );
-                                }
-                              } else {
-                                // HTTP error, show a dialog
-                                showDialog(
-                                  context: context,
-                                  builder: (BuildContext context) {
-                                    return AlertDialog(
-                                      title:
-                                          const Text('Password Change Failed'),
-                                      content: Text(
-                                          'HTTP error: ${response.statusCode}'),
-                                      actions: [
-                                        TextButton(
-                                          child: const Text('OK'),
-                                          onPressed: () {
-                                            Navigator.of(context).pop();
-                                          },
-                                        ),
-                                      ],
-                                    );
-                                  },
-                                );
-                              }
+                                },
+                              );
                             }
                           }
                         : null,

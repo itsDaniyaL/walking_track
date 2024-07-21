@@ -6,7 +6,15 @@ import 'package:walking_track/screens/main_dashboard.dart';
 import 'package:walking_track/shared/filled_button.dart';
 import 'package:walking_track/shared/text_field.dart';
 
+import 'package:flutter/material.dart';
+import 'package:pedometer/pedometer.dart';
+import 'package:provider/provider.dart';
+import 'dart:async';
+import 'package:intl/intl.dart';
+
 class WalkingWorkoutPage extends StatefulWidget {
+  const WalkingWorkoutPage({super.key});
+
   @override
   _WalkingWorkoutPageState createState() => _WalkingWorkoutPageState();
 }
@@ -19,9 +27,12 @@ class _WalkingWorkoutPageState extends State<WalkingWorkoutPage> {
   bool _isWalking = false,
       _isTimerVisible = false,
       _areStepsVisible = false,
-      _isStopVisible = false;
+      _isStopVisible = false,
+      _isPainButtonDisabled = false;
   Timer? _countupTimer;
   int _elapsedTime = 0;
+  List<String> restTimestamps = [];
+  List<int> painLevels = [];
 
   @override
   void initState() {
@@ -92,15 +103,17 @@ class _WalkingWorkoutPageState extends State<WalkingWorkoutPage> {
   }
 
   void rest() {
-    _countupTimer?.cancel();
     setState(() {
       _isWalking = false;
+      restTimestamps
+          .add(DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now()));
     });
   }
 
   void continueWalking() {
     setState(() {
       _isWalking = true;
+      _isPainButtonDisabled = false;
     });
     startTimer();
   }
@@ -161,12 +174,62 @@ class _WalkingWorkoutPageState extends State<WalkingWorkoutPage> {
     });
   }
 
+  void showPainLevelDialog() {
+    int painLevel = 0;
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Pain Level'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Please select your pain level (0-10):'),
+              Slider(
+                value: painLevel.toDouble(),
+                min: 0,
+                max: 10,
+                divisions: 10,
+                label: painLevel.toString(),
+                onChanged: (double value) {
+                  setState(() {
+                    painLevel = value.toInt();
+                  });
+                },
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  painLevels.add(painLevel);
+                  _isPainButtonDisabled = true;
+                });
+                Navigator.of(context).pop();
+              },
+              child: const Text('Submit'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       home: Scaffold(
+        resizeToAvoidBottomInset: false,
         appBar: AppBar(
-          title: const Text('6 Minute Walking Test'),
+          title: const Text(
+            'Walking Workout',
+            style: TextStyle(color: Colors.black),
+          ),
+          iconTheme: const IconThemeData(
+            color: Colors.black,
+          ),
+          backgroundColor: Colors.transparent,
         ),
         body: Center(
           child: Column(
@@ -245,22 +308,52 @@ class _WalkingWorkoutPageState extends State<WalkingWorkoutPage> {
                 ),
               const SizedBox(height: 100),
               if (_isStopVisible)
-                CustomFilledButton(
-                  onPressed: showSymptomsBottomSheet,
-                  width: 150,
-                  height: 150,
-                  buttonColor: const Color(0xFFD94C4C),
-                  borderRadius: BorderRadius.circular(60),
-                  child: const Padding(
-                    padding: EdgeInsets.only(bottom: 15.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.close, size: 50),
-                        Text("Stop Wrkout"),
-                      ],
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    CustomFilledButton(
+                      onPressed: _isPainButtonDisabled
+                          ? null
+                          : () {
+                              showPainLevelDialog();
+                            },
+                      width: 150,
+                      height: 150,
+                      buttonColor: const Color(0xFF554EEB),
+                      borderRadius: BorderRadius.circular(60),
+                      child: const Padding(
+                        padding: EdgeInsets.only(bottom: 15.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Center(
+                              child: Text(
+                                "Pain?",
+                                style: TextStyle(fontSize: 20),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
+                    CustomFilledButton(
+                      onPressed: showSymptomsBottomSheet,
+                      width: 150,
+                      height: 150,
+                      buttonColor: const Color(0xFFD94C4C),
+                      borderRadius: BorderRadius.circular(60),
+                      child: const Padding(
+                        padding: EdgeInsets.only(bottom: 15.0),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.close, size: 50),
+                            Text("Stop Workout"),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
             ],
           ),
