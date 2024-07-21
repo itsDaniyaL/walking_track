@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:walking_track/providers/sign_up_provider.dart';
 import 'package:walking_track/screens/sign_in.dart';
 import 'package:walking_track/screens/sign_up_diagnostics.dart';
 import 'package:walking_track/shared/filled_button.dart';
@@ -24,15 +26,15 @@ class _SignUpUserInfoPageState extends State<SignUpUserInfoPage> {
       postalCode = "";
 
   bool validateForm() {
-    return Validators.validatorEmail(email) &&
-        firstName.isNotEmpty &&
-        lastName.isNotEmpty &&
-        cellPhoneNumber.isNotEmpty &&
-        city.isNotEmpty &&
-        state.isNotEmpty &&
-        province.isNotEmpty &&
-        country.isNotEmpty &&
-        postalCode.isNotEmpty;
+    return Validators.validateNameField(firstName, "First Name") == null &&
+        Validators.validateNameField(lastName, "Last Name") == null &&
+        Validators.validateCellPhoneField(cellPhoneNumber) == null &&
+        Validators.validateEmailField(email) == null &&
+        Validators.validateGenericFields(city, "City") == null &&
+        Validators.validateGenericFields(state, "State") == null &&
+        Validators.validateGenericFields(province, "Province") == null &&
+        Validators.validateGenericFields(country, "Country") == null &&
+        Validators.validateGenericFields(postalCode, "Postal Code") == null;
   }
 
   @override
@@ -55,7 +57,7 @@ class _SignUpUserInfoPageState extends State<SignUpUserInfoPage> {
         child: Column(
           children: [
             SizedBox(
-                height: MediaQuery.of(context).size.height * 0.65,
+                height: MediaQuery.of(context).size.height * 0.7,
                 child: SingleChildScrollView(
                   child: Column(
                     children: [
@@ -67,8 +69,8 @@ class _SignUpUserInfoPageState extends State<SignUpUserInfoPage> {
                           });
                         },
                         prefixIcon: Icons.person_2_outlined,
-                        validator: (value) => Validators.validateGenericFields(
-                            value!, "First Name"),
+                        validator: (value) =>
+                            Validators.validateNameField(value!, "First Name"),
                       ),
                       CustomTextField(
                         hintText: "Last Name",
@@ -78,8 +80,8 @@ class _SignUpUserInfoPageState extends State<SignUpUserInfoPage> {
                           });
                         },
                         prefixIcon: Icons.person_2_outlined,
-                        validator: (value) => Validators.validateGenericFields(
-                            value!, "Last Name"),
+                        validator: (value) =>
+                            Validators.validateNameField(value!, "Last Name"),
                       ),
                       CustomTextField(
                         hintText: "Cell Phone Number",
@@ -90,6 +92,7 @@ class _SignUpUserInfoPageState extends State<SignUpUserInfoPage> {
                         },
                         prefixIcon: Icons.call_outlined,
                         validator: Validators.validateCellPhoneField,
+                        maxLength: 11,
                       ),
                       CustomTextField(
                         hintText: "Email",
@@ -156,38 +159,38 @@ class _SignUpUserInfoPageState extends State<SignUpUserInfoPage> {
                         validator: (value) => Validators.validateGenericFields(
                             value!, "Postal Code"),
                       ),
+                      CustomFilledButton(
+                        onPressed: validateForm()
+                            ? () {
+                                final userInfo = [
+                                  firstName,
+                                  lastName,
+                                  cellPhoneNumber,
+                                  email,
+                                  city,
+                                  state,
+                                  province,
+                                  country,
+                                  postalCode,
+                                ];
+                                context
+                                    .read<SignUpProvider>()
+                                    .updateUserInfo(userInfo);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          const SignUpDiagnosticsPage()),
+                                );
+                              }
+                            : null,
+                        textColor: Theme.of(context).secondaryHeaderColor,
+                        buttonColor: Theme.of(context).primaryColorLight,
+                        child: const Icon(Icons.arrow_forward_ios_rounded),
+                      ),
                     ],
                   ),
                 )),
-            SizedBox(
-              height: MediaQuery.of(context).size.height * 0.1,
-              width: MediaQuery.of(context).size.width * 0.75,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  CustomFilledButton(
-                    onPressed: validateForm()
-                        ? () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) =>
-                                      const SignUpDiagnosticsPage()),
-                            );
-                          }
-                        : null,
-                    // validateForm()
-                    //     ? () {
-                    //         authenticateUser();
-                    //       }
-                    //     : null,
-                    textColor: Theme.of(context).secondaryHeaderColor,
-                    buttonColor: Theme.of(context).primaryColorLight,
-                    child: const Icon(Icons.arrow_forward_ios_rounded),
-                  ),
-                ],
-              ),
-            ),
             SizedBox(
               height: MediaQuery.of(context).size.height * 0.1,
               width: MediaQuery.of(context).size.width * 0.75,
@@ -208,11 +211,6 @@ class _SignUpUserInfoPageState extends State<SignUpUserInfoPage> {
                             builder: (context) => const SignInPage()),
                       );
                     },
-                    // validateForm()
-                    //     ? () {
-                    //         authenticateUser();
-                    //       }
-                    //     : null,
                     textColor: Theme.of(context).secondaryHeaderColor,
                     buttonColor: const Color(0xFFE1E1E1),
                     child: const Text(

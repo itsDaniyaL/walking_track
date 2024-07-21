@@ -15,6 +15,7 @@ class CustomTextField extends StatefulWidget {
     this.maxLines,
     required this.onChanged,
     this.validator,
+    this.maxLength,
   });
 
   final String hintText;
@@ -28,6 +29,7 @@ class CustomTextField extends StatefulWidget {
   final bool? maxLines;
   final ValueChanged<String> onChanged;
   final String? Function(String?)? validator;
+  final int? maxLength;
 
   @override
   State<CustomTextField> createState() => _CustomTextFieldState();
@@ -66,6 +68,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
             child: SizedBox(
               width: (widget.width ?? 300.0),
               child: TextField(
+                maxLength: widget.maxLength,
                 enabled: widget.disabled ?? false ? false : true,
                 controller: _controller,
                 focusNode: _focusNode,
@@ -81,6 +84,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
                         ? Theme.of(context).primaryColorLight
                         : Colors.black),
                 decoration: InputDecoration(
+                  counterText: '',
                   prefixIcon: CustomIcon(
                     icon: widget.prefixIcon,
                     iconColor: Colors.black,

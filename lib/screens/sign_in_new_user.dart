@@ -1,5 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:walking_track/providers/user_data_provider.dart';
 import 'package:walking_track/screens/allow_permissions.dart';
+import 'package:walking_track/services/api_service.dart';
 import 'package:walking_track/shared/filled_button.dart';
 import 'package:walking_track/shared/text_field.dart';
 import 'package:walking_track/utils/validators.dart';
@@ -18,12 +23,14 @@ class _SignInNewUserPageState extends State<SignInNewUserPage> {
       confirmPassword = "";
 
   bool validateForm() {
-    return true;
+    return Validators.validatorPassword(password) &&
+        Validators.validatorPassword(confirmPassword) &&
+        (password == confirmPassword);
     // Validators.validatorCellPhoneNumber(cellPhoneNumber) &&
-    // Validators.validatorEmail(email) &&
-    //     Validators.validatorPassword(password) &&
-    //     Validators.validatorPassword(confirmPassword) &&
-    //     (password == confirmPassword);
+    //     Validators.validatorEmail(email) &&
+    // Validators.validatorPassword(password) &&
+    // Validators.validatorPassword(confirmPassword) &&
+    // (password == confirmPassword);
   }
 
   @override
@@ -59,9 +66,9 @@ class _SignInNewUserPageState extends State<SignInNewUserPage> {
                         CustomTextField(
                           hintText: "Cell Phone Number",
                           onChanged: (text) {
-                            // setState(() {
-                            //   emailText = text;
-                            // });
+                            setState(() {
+                              cellPhoneNumber = text;
+                            });
                           },
                           prefixIcon: Icons.call_outlined,
                           validator: Validators.validateCellPhoneField,
@@ -69,9 +76,9 @@ class _SignInNewUserPageState extends State<SignInNewUserPage> {
                         CustomTextField(
                           hintText: "Email",
                           onChanged: (text) {
-                            // setState(() {
-                            //   emailText = text;
-                            // });
+                            setState(() {
+                              email = text;
+                            });
                           },
                           prefixIcon: Icons.email_outlined,
                           validator: Validators.validateEmailField,
@@ -82,9 +89,9 @@ class _SignInNewUserPageState extends State<SignInNewUserPage> {
                         CustomTextField(
                           hintText: "Password",
                           onChanged: (text) {
-                            // setState(() {
-                            //   emailText = text;
-                            // });
+                            setState(() {
+                              password = text;
+                            });
                           },
                           prefixIcon: Icons.lock_outline,
                           suffixIcon: Icons.visibility_outlined,
@@ -94,9 +101,9 @@ class _SignInNewUserPageState extends State<SignInNewUserPage> {
                         CustomTextField(
                           hintText: "Confirm Password",
                           onChanged: (text) {
-                            // setState(() {
-                            //   emailText = text;
-                            // });
+                            setState(() {
+                              confirmPassword = text;
+                            });
                           },
                           prefixIcon: Icons.lock_outline,
                           suffixIcon: Icons.visibility_outlined,
@@ -115,13 +122,74 @@ class _SignInNewUserPageState extends State<SignInNewUserPage> {
                 children: [
                   CustomFilledButton(
                     onPressed: validateForm()
-                        ? () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) =>
-                                      const AllowPermissionsPage()),
-                            );
+                        ? () async {
+                            final apiService = ApiService();
+                            final userName = Provider.of<UserDataProvider>(
+                                    context,
+                                    listen: false)
+                                .phone;
+
+                            if (userName != null) {
+                              final response = await apiService.changePassword(
+                                  userName, password);
+
+                              if (response.statusCode == 200) {
+                                final jsonResponse = jsonDecode(response.body);
+
+                                if (jsonResponse['success'] == true) {
+                                  // Password change successful, navigate to the next page
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          const AllowPermissionsPage(),
+                                    ),
+                                  );
+                                } else {
+                                  // Password change failed, show a dialog
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) {
+                                      return AlertDialog(
+                                        title: const Text(
+                                            'Password Change Failed'),
+                                        content: Text(jsonResponse['message'] ??
+                                            'Unknown error occurred'),
+                                        actions: [
+                                          TextButton(
+                                            child: const Text('OK'),
+                                            onPressed: () {
+                                              Navigator.of(context).pop();
+                                            },
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
+                                }
+                              } else {
+                                // HTTP error, show a dialog
+                                showDialog(
+                                  context: context,
+                                  builder: (BuildContext context) {
+                                    return AlertDialog(
+                                      title:
+                                          const Text('Password Change Failed'),
+                                      content: Text(
+                                          'HTTP error: ${response.statusCode}'),
+                                      actions: [
+                                        TextButton(
+                                          child: const Text('OK'),
+                                          onPressed: () {
+                                            Navigator.of(context).pop();
+                                          },
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
+                              }
+                            }
                           }
                         : null,
                     textColor: Theme.of(context).secondaryHeaderColor,

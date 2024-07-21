@@ -1,6 +1,14 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:provider/provider.dart';
+import 'package:walking_track/providers/user_data_provider.dart';
+import 'package:walking_track/screens/allow_permissions.dart';
 import 'package:walking_track/screens/sign_in_new_user.dart';
 import 'package:walking_track/screens/sign_up_description.dart';
+import 'package:walking_track/screens/six_minute_walking.dart';
+import 'package:walking_track/services/api_service.dart';
 import 'package:walking_track/shared/filled_button.dart';
 import 'package:walking_track/shared/text_field.dart';
 import 'package:walking_track/utils/validators.dart';
@@ -19,6 +27,22 @@ class _SignInPageState extends State<SignInPage> {
   bool validateForm() {
     return Validators.validatorUserName(userNameText) &&
         Validators.validatorPassword(passwordText);
+  }
+
+  Future<bool> checkNewUser(BuildContext context) async {
+    try {
+      final userDataProvider =
+          Provider.of<UserDataProvider>(context, listen: false);
+      print("Checking again");
+      await userDataProvider.signIn(userNameText, passwordText);
+      final passwordChanged = userDataProvider.passwordChanged;
+      print("Checking");
+      print(passwordChanged);
+      return passwordChanged == "1";
+    } catch (e) {
+      print('Error during sign in: $e');
+    }
+    return false;
   }
 
   @override
@@ -88,13 +112,37 @@ class _SignInPageState extends State<SignInPage> {
                 children: [
                   CustomFilledButton(
                     onPressed: validateForm()
-                        ? () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) =>
-                                      const SignInNewUserPage()),
-                            );
+                        ? () async {
+                            print("Checking");
+                            final bool isNewUser = await checkNewUser(context);
+
+                            PermissionStatus notificationPermission =
+                                await Permission.notification.status;
+                            PermissionStatus activityPermission =
+                                await Permission.activityRecognition.status;
+                            if (!isNewUser) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        const SignInNewUserPage()),
+                              );
+                            } else if (notificationPermission.isGranted &&
+                                activityPermission.isGranted) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        SixMinuteWalkingPage()),
+                              );
+                            } else {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        AllowPermissionsPage()),
+                              );
+                            }
                           }
                         : null,
                     textColor: Theme.of(context).secondaryHeaderColor,
@@ -149,11 +197,6 @@ class _SignInPageState extends State<SignInPage> {
                                 const SignUpDescriptionPage()),
                       );
                     },
-                    // validateForm()
-                    //     ? () {
-                    //         authenticateUser();
-                    //       }
-                    //     : null,
                     textColor: Theme.of(context).secondaryHeaderColor,
                     buttonColor: const Color(0xFFE1E1E1),
                     child: const Text(

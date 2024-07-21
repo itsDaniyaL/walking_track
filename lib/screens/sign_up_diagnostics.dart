@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:walking_track/providers/sign_up_provider.dart';
 import 'package:walking_track/screens/sign_in.dart';
 import 'package:walking_track/shared/filled_button.dart';
 import 'package:walking_track/shared/switch_question.dart';
@@ -43,7 +45,7 @@ class _SignUpDiagnosticsPageState extends State<SignUpDiagnosticsPage> {
           child: Column(
         children: [
           SizedBox(
-              height: MediaQuery.of(context).size.height * 0.65,
+              height: MediaQuery.of(context).size.height * 0.75,
               width: MediaQuery.of(context).size.width * 0.75,
               child: SingleChildScrollView(
                 child: Column(
@@ -96,33 +98,35 @@ class _SignUpDiagnosticsPageState extends State<SignUpDiagnosticsPage> {
                               }),
                         ],
                       ),
+                    CustomFilledButton(
+                      onPressed: validateForm()
+                          ? () async {
+                              final String tempPadYN = padYN ? '1' : '0';
+                              final String tempVascularSpecialist =
+                                  vascularSpecialist ? '1' : '0';
+                              final String tempClearForWalking =
+                                  clearForWalking ? '1' : '0';
+                              final userDiagnostics = [
+                                tempPadYN,
+                                tempVascularSpecialist,
+                                specialistFirstName,
+                                specialistLastName,
+                                tempClearForWalking,
+                              ];
+                              context
+                                  .read<SignUpProvider>()
+                                  .updateUserDiagnostics(userDiagnostics);
+                              await context.read<SignUpProvider>().signUp();
+                              _dialogBuilder(context);
+                            }
+                          : null,
+                      textColor: Theme.of(context).secondaryHeaderColor,
+                      buttonColor: Theme.of(context).primaryColorLight,
+                      child: const Icon(Icons.arrow_forward_ios_rounded),
+                    ),
                   ],
                 ),
               )),
-          SizedBox(
-            height: MediaQuery.of(context).size.height * 0.1,
-            width: MediaQuery.of(context).size.width * 0.75,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                CustomFilledButton(
-                  onPressed: validateForm()
-                      ? () {
-                          _dialogBuilder(context);
-                        }
-                      : null,
-                  // validateForm()
-                  //     ? () {
-                  //         authenticateUser();
-                  //       }
-                  //     : null,
-                  textColor: Theme.of(context).secondaryHeaderColor,
-                  buttonColor: Theme.of(context).primaryColorLight,
-                  child: const Icon(Icons.arrow_forward_ios_rounded),
-                ),
-              ],
-            ),
-          ),
           SizedBox(
             height: MediaQuery.of(context).size.height * 0.1,
             width: MediaQuery.of(context).size.width * 0.75,
@@ -143,11 +147,6 @@ class _SignUpDiagnosticsPageState extends State<SignUpDiagnosticsPage> {
                           builder: (context) => const SignInPage()),
                     );
                   },
-                  // validateForm()
-                  //     ? () {
-                  //         authenticateUser();
-                  //       }
-                  //     : null,
                   textColor: Theme.of(context).secondaryHeaderColor,
                   buttonColor: const Color(0xFFE1E1E1),
                   child: const Text(
