@@ -7,6 +7,21 @@
 		  <string>fetch</string>
 		  <string>remote-notification</string>
 		</array>
+		<key>UIBackgroundModes</key>
+		<array>
+		    <string>fetch</string>
+		    <string>processing</string>
+		</array>
+		<key>BGTaskSchedulerPermittedIdentifiers</key>
+		<array>
+			<string>com.example.walkingtrack.processWalk</string>
+		</array>
+		<key>NSLocationAlwaysUsageDescription</key>
+		<string>We need your location to provide step count data.</string>
+		<key>NSLocationWhenInUseUsageDescription</key>
+		<string>We need your location to provide step count data.</string>
+		<key>NSMotionUsageDescription</key>
+		<string>We need access to your motion and fitness data to count your steps.</string>
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>
@@ -40,13 +55,21 @@
 		<key>UISupportedInterfaceOrientations~ipad</key>
 		<array>
 			<string>UIInterfaceOrientationPortrait</string>
+			<string>UIInterfaceOrientationPortraitUpsideDown</string>
+			<string>UIInterfaceOrientationLandscapeLeft</string>
+			<string>UIInterfaceOrientationLandscapeRight</string>
 		</array>
 		<key>CADisableMinimumFrameDurationOnPhone</key>
 		<true/>
 		<key>UIApplicationSupportsIndirectInputEvents</key>
 		<true/>
-		<key>NSMotionUsageDescription</key>
-		<string>This application tracks your steps</string>
+		<key>NSUserTrackingUsageDescription</key>
+		<string>We need access to your notifications for tracking purposes.</string>
+		<key>UIBackgroundModes</key>
+		<array>
+		    <string>fetch</string>
+		    <string>processing</string>
+		</array>
 		<key>UIBackgroundModes</key>
 		<array>
 			<string>processing</string>

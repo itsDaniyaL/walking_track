@@ -44,11 +44,7 @@ class _SignUpDescriptionPageState extends State<SignUpDescriptionPage> {
               children: [
                 CustomFilledButton(
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const SignUpUserInfoPage()),
-                    );
+                    Navigator.pushNamed(context, '/signUpUserInfo');
                   },
                   // validateForm()
                   //     ? () {
@@ -76,11 +72,7 @@ class _SignUpDescriptionPageState extends State<SignUpDescriptionPage> {
                 ),
                 CustomFilledButton(
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const SignInPage()),
-                    );
+                    Navigator.pushNamed(context, '/signIn');
                   },
                   // validateForm()
                   //     ? () {

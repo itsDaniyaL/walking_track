@@ -1,7 +1,7 @@
 class SignUpData {
   String phone;
-  String fName;
-  String lName;
+  String fname;
+  String lname;
   String email;
   String city;
   String state;
@@ -16,8 +16,8 @@ class SignUpData {
 
   SignUpData({
     this.phone = '',
-    this.fName = '',
-    this.lName = '',
+    this.fname = '',
+    this.lname = '',
     this.email = '',
     this.city = '',
     this.state = '',
@@ -34,19 +34,19 @@ class SignUpData {
   Map<String, String> toJson() {
     return {
       'phone': phone,
-      'fName': fName,
-      'lName': lName,
+      'fname': fname,
+      'lname': lname,
       'email': email,
       'city': city,
       'state': state,
       'province': province,
       'country': country,
-      'postalCode': postalCode,
+      'postalcode': postalCode,
       'diagnosed': diagnosed,
-      'vSpecialist': vSpecialist,
-      'vFname': vFname,
-      'vLname': vLname,
-      'medicalClear': medicalClear,
+      'v_specialist': vSpecialist,
+      'v_fname': vFname,
+      'v_lname': vLname,
+      'medical_clear': medicalClear,
     };
   }
 }

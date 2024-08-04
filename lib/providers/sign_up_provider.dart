@@ -1,6 +1,3 @@
-import 'dart:convert';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:walking_track/models/sign_up_data.dart';
 import 'package:walking_track/services/api_service.dart';
@@ -11,8 +8,8 @@ class SignUpProvider with ChangeNotifier {
   SignUpData get signUpData => _signUpData;
 
   void updateUserInfo(List<String> userInfo) {
-    _signUpData.fName = userInfo[0];
-    _signUpData.lName = userInfo[1];
+    _signUpData.fname = userInfo[0];
+    _signUpData.lname = userInfo[1];
     _signUpData.phone = userInfo[2];
     _signUpData.email = userInfo[3];
     _signUpData.city = userInfo[4];
@@ -32,28 +29,26 @@ class SignUpProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> signUp() async {
+  Future<bool> signUp() async {
     final apiService = ApiService();
-    final token = await apiService.getToken();
-
-    if (token == null) {
-      print('Failed to get token');
-      return;
-    }
 
     try {
       final response = await apiService.signUp(_signUpData.toJson());
 
       if (response.statusCode == 200) {
         // Handle successful sign up
-        print('Sign up successful');
+        debugPrint(response.data);
+        debugPrint('Sign up successful');
+        return true;
       } else {
         // Handle sign up error
-        print('Sign up failed: ${response.statusCode}');
+        debugPrint('Sign up failed: ${response.statusCode} -${response.data}');
+        return false;
       }
     } catch (e) {
       // Handle connection error
-      print('Sign up error: $e');
+      debugPrint('Sign up error: $e');
     }
+    return false;
   }
 }

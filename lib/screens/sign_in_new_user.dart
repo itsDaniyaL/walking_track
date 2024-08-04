@@ -1,10 +1,6 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:walking_track/providers/user_data_provider.dart';
-import 'package:walking_track/screens/allow_permissions.dart';
-import 'package:walking_track/services/api_service.dart';
 import 'package:walking_track/shared/filled_button.dart';
 import 'package:walking_track/shared/text_field.dart';
 import 'package:walking_track/utils/validators.dart';
@@ -17,20 +13,21 @@ class SignInNewUserPage extends StatefulWidget {
 }
 
 class _SignInNewUserPageState extends State<SignInNewUserPage> {
-  late String cellPhoneNumber = "",
-      email = "",
+  late String
+      // cellPhoneNumber = "",
+      //     email = "",
       password = "",
       confirmPassword = "";
 
+  late bool loading = false;
+
   bool validateForm() {
-    return Validators.validatorPassword(password) &&
-        Validators.validatorPassword(confirmPassword) &&
-        (password == confirmPassword);
-    // Validators.validatorCellPhoneNumber(cellPhoneNumber) &&
-    //     Validators.validatorEmail(email) &&
-    // Validators.validatorPassword(password) &&
-    // Validators.validatorPassword(confirmPassword) &&
-    // (password == confirmPassword);
+    return
+        // cellPhoneNumber.isNotEmpty &&
+        //     email.isNotEmpty &&
+        Validators.validatorPassword(password) &&
+            Validators.validatorPassword(confirmPassword) &&
+            (password == confirmPassword);
   }
 
   @override
@@ -60,29 +57,29 @@ class _SignInNewUserPageState extends State<SignInNewUserPage> {
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
-                        const Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text("Please provide contact info")),
-                        CustomTextField(
-                          hintText: "Cell Phone Number",
-                          onChanged: (text) {
-                            setState(() {
-                              cellPhoneNumber = text;
-                            });
-                          },
-                          prefixIcon: Icons.call_outlined,
-                          validator: Validators.validateCellPhoneField,
-                        ),
-                        CustomTextField(
-                          hintText: "Email",
-                          onChanged: (text) {
-                            setState(() {
-                              email = text;
-                            });
-                          },
-                          prefixIcon: Icons.email_outlined,
-                          validator: Validators.validateEmailField,
-                        ),
+                        // const Align(
+                        //     alignment: Alignment.centerLeft,
+                        //     child: Text("Please provide contact info")),
+                        // CustomTextField(
+                        //   hintText: "Cell Phone Number",
+                        //   onChanged: (text) {
+                        //     setState(() {
+                        //       cellPhoneNumber = text;
+                        //     });
+                        //   },
+                        //   prefixIcon: Icons.call_outlined,
+                        //   validator: Validators.validateCellPhoneField,
+                        // ),
+                        // CustomTextField(
+                        //   hintText: "Email",
+                        //   onChanged: (text) {
+                        //     setState(() {
+                        //       email = text;
+                        //     });
+                        //   },
+                        //   prefixIcon: Icons.email_outlined,
+                        //   validator: Validators.validateEmailField,
+                        // ),
                         const Align(
                             alignment: Alignment.centerLeft,
                             child: Text("Change Password")),
@@ -121,39 +118,41 @@ class _SignInNewUserPageState extends State<SignInNewUserPage> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   CustomFilledButton(
-                    onPressed: validateForm()
+                    onPressed: validateForm() && !loading
                         ? () async {
-                            final bool changeStatus =
-                                await Provider.of<UserDataProvider>(context)
-                                    .changePassword(password);
+                            setState(() {
+                              loading = true;
+                            });
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: const Text('Loading...'),
+                                duration: const Duration(seconds: 2),
+                              ),
+                            );
+                            final bool changeStatus = await context
+                                .read<UserDataProvider>()
+                                .changePassword(password);
                             if (changeStatus) {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      const AllowPermissionsPage(),
+                              Navigator.pushNamed(context, '/allowPermissions');
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: const Text(
+                                      'Changing Password Successful!'),
+                                  duration: const Duration(seconds: 3),
                                 ),
                               );
                             } else {
-                              showDialog(
-                                context: context,
-                                builder: (BuildContext context) {
-                                  return AlertDialog(
-                                    title: const Text('Password Change Failed'),
-                                    content:
-                                        const Text('Unknown error occurred'),
-                                    actions: [
-                                      TextButton(
-                                        child: const Text('OK'),
-                                        onPressed: () {
-                                          Navigator.of(context).pop();
-                                        },
-                                      ),
-                                    ],
-                                  );
-                                },
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content:
+                                      const Text('Changing Password Failed!'),
+                                  duration: const Duration(seconds: 3),
+                                ),
                               );
                             }
+                            setState(() {
+                              loading = false;
+                            });
                           }
                         : null,
                     textColor: Theme.of(context).secondaryHeaderColor,

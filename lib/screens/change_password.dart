@@ -6,8 +6,6 @@ import 'package:walking_track/shared/filled_button.dart';
 import 'package:walking_track/shared/text_field.dart';
 import 'package:walking_track/utils/validators.dart';
 
-import 'package:flutter/material.dart';
-
 class ChangePasswordPage extends StatefulWidget {
   @override
   _ChangePasswordPageState createState() => _ChangePasswordPageState();
@@ -16,6 +14,7 @@ class ChangePasswordPage extends StatefulWidget {
 class _ChangePasswordPageState extends State<ChangePasswordPage> {
   String passwordText = '';
   String confirmPasswordText = '';
+  late bool loading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -61,40 +60,57 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
               ),
               SizedBox(height: 32),
               CustomFilledButton(
-                onPressed: () async {
-                  if (Validators.validatePasswordField(passwordText) == null &&
-                      passwordText == confirmPasswordText) {
-                    final bool changeStatus =
-                        await Provider.of<UserDataProvider>(context)
-                            .changePassword(passwordText);
-                    if (changeStatus) {
-                      Provider.of<UserDataProvider>(context).clearAccount();
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const SignInPage()),
-                      );
-                    } else {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: const Text('Password Change Failed'),
-                            content: const Text('Unknown error occurred'),
-                            actions: [
-                              TextButton(
-                                child: const Text('OK'),
-                                onPressed: () {
-                                  Navigator.of(context).pop();
-                                },
+                onPressed: !loading
+                    ? () async {
+                        setState(() {
+                          loading = true;
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: const Text('Loading...'),
+                            duration: const Duration(seconds: 4),
+                          ),
+                        );
+                        if (Validators.validatePasswordField(passwordText) ==
+                                null &&
+                            passwordText == confirmPasswordText) {
+                          final bool changeStatus = await context
+                              .read<UserDataProvider>()
+                              .changePassword(passwordText);
+                          if (changeStatus) {
+                            context.read<UserDataProvider>().clearAccount();
+                            Navigator.pushNamed(context, '/signIn');
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: const Text('Password Changed!'),
+                                duration: const Duration(seconds: 4),
                               ),
-                            ],
-                          );
-                        },
-                      );
-                    }
-                  }
-                },
+                            );
+                          } else {
+                            showDialog(
+                              context: context,
+                              builder: (BuildContext context) {
+                                return AlertDialog(
+                                  title: const Text('Password Change Failed'),
+                                  content: const Text('Unknown error occurred'),
+                                  actions: [
+                                    TextButton(
+                                      child: const Text('OK'),
+                                      onPressed: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                    ),
+                                  ],
+                                );
+                              },
+                            );
+                          }
+                        }
+                        setState(() {
+                          loading = false;
+                        });
+                      }
+                    : null,
                 textColor: Theme.of(context).secondaryHeaderColor,
                 buttonColor: Theme.of(context).primaryColorLight,
                 child: Text('Change Password'),

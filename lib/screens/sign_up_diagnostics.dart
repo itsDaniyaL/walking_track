@@ -117,8 +117,19 @@ class _SignUpDiagnosticsPageState extends State<SignUpDiagnosticsPage> {
                               context
                                   .read<SignUpProvider>()
                                   .updateUserDiagnostics(userDiagnostics);
-                              await context.read<SignUpProvider>().signUp();
-                              _dialogBuilder(context);
+                              final checkStatus =
+                                  await context.read<SignUpProvider>().signUp();
+                              if (checkStatus) {
+                                _dialogBuilder(context);
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: const Text(
+                                        'Sign up failed. Please try again later!'),
+                                    duration: const Duration(seconds: 4),
+                                  ),
+                                );
+                              }
                             }
                           : null,
                       textColor: Theme.of(context).secondaryHeaderColor,
@@ -142,11 +153,7 @@ class _SignUpDiagnosticsPageState extends State<SignUpDiagnosticsPage> {
                 ),
                 CustomFilledButton(
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const SignInPage()),
-                    );
+                    Navigator.pushNamed(context, '/signIn');
                   },
                   textColor: Theme.of(context).secondaryHeaderColor,
                   buttonColor: const Color(0xFFE1E1E1),
@@ -187,18 +194,12 @@ class _SignUpDiagnosticsPageState extends State<SignUpDiagnosticsPage> {
                 style: TextStyle(color: Colors.black),
               ),
               onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SignInPage()),
-                );
+                Navigator.pushNamed(context, '/signIn');
               },
             ),
           ],
         );
       },
-    ).then((value) => Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const SignInPage()),
-        ));
+    ).then((value) => Navigator.pushNamed(context, '/signIn'));
   }
 }

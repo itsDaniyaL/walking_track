@@ -1,16 +1,14 @@
 # walking_track
 
-A new Flutter project.
+Walking Track Flutter project.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+Run following command in terminal
+- flutter pub get
 
-A few resources to get you started if this is your first Flutter project:
+Add .env file in root with following being the variables
+CLIENT_ID
+CLIENT_SECRET
+API_KEY
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.

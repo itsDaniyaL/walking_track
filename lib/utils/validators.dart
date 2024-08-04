@@ -4,7 +4,7 @@ class Validators {
   );
 
   static final RegExp passwordRegExp = RegExp(
-    r'^(?=.*[A-Z]).{8,}$',
+    r'^(?=.*[A-Z]).{7,}$',
   );
 
   static final RegExp userNameRegExp = RegExp(
@@ -24,7 +24,7 @@ class Validators {
   }
 
   static bool validatorPassword(String password) {
-    return password.isNotEmpty;
+    return password.isNotEmpty && passwordRegExp.hasMatch(password);
   }
 
   static bool validatorUserName(String userName) {
@@ -79,7 +79,7 @@ class Validators {
     if (value == null || value.isEmpty) {
       return 'Password is required';
     }
-    if (value.length < 8) {
+    if (value.length < 7) {
       return 'Must include atleast 7+ characters';
     }
     return null;

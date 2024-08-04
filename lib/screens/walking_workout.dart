@@ -1,16 +1,14 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:pedometer/pedometer.dart';
-import 'package:walking_track/screens/main_dashboard.dart';
-import 'package:walking_track/shared/filled_button.dart';
-import 'package:walking_track/shared/text_field.dart';
-
-import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:pedometer/pedometer.dart';
 import 'package:provider/provider.dart';
-import 'dart:async';
-import 'package:intl/intl.dart';
+import 'package:walking_track/providers/user_data_provider.dart';
+import 'package:walking_track/screens/main_dashboard.dart';
+import 'package:walking_track/shared/filled_button.dart';
+import 'package:walking_track/shared/notificationservice.dart';
+import 'package:walking_track/shared/text_field.dart';
 
 class WalkingWorkoutPage extends StatefulWidget {
   const WalkingWorkoutPage({super.key});
@@ -19,25 +17,70 @@ class WalkingWorkoutPage extends StatefulWidget {
   _WalkingWorkoutPageState createState() => _WalkingWorkoutPageState();
 }
 
-class _WalkingWorkoutPageState extends State<WalkingWorkoutPage> {
+class _WalkingWorkoutPageState extends State<WalkingWorkoutPage>
+    with WidgetsBindingObserver {
   late Stream<StepCount> _stepCountStream;
   late Stream<PedestrianStatus> _pedestrianStatusStream;
-  String _status = '?', _steps = '0', _timer = '00:00';
-  int _initialSteps = 0;
+  String _status = '?', _steps = '0', _timer = '00:00', symptom = "";
+  int _initialSteps = 0, continueCount = 1;
   bool _isWalking = false,
       _isTimerVisible = false,
       _areStepsVisible = false,
       _isStopVisible = false,
-      _isPainButtonDisabled = false;
+      _isPainShowing = false,
+      _isResting = false;
   Timer? _countupTimer;
   int _elapsedTime = 0;
   List<String> restTimestamps = [];
   List<int> painLevels = [];
+  List<String> claudication = [];
+  List<String> captureTimeN = [];
+  String? startTime, endTime;
+  bool _hasReturnedToApp = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    NotificationService().initNotification(handleNotificationTap);
     initPlatformState();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _countupTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      _hasReturnedToApp = false;
+
+      // Delay showing the notification by 15 seconds
+      Future.delayed(const Duration(seconds: 15), () {
+        if (!_hasReturnedToApp && _isWalking) {
+          NotificationService().showNotification(
+              2, "Continue Walking", "Please continue your walking workout.");
+
+          Future.delayed(const Duration(seconds: 30), () {
+            if (!_hasReturnedToApp) {
+              formatAndStoreWalkingData();
+              NotificationService().showNotification(2, "Walking Workout Saved",
+                  "Workout saved as you did not return back to the app");
+              Navigator.of(context).pushReplacementNamed('/mainDashboard');
+            }
+          });
+        }
+      });
+    } else if (state == AppLifecycleState.resumed) {
+      _hasReturnedToApp = true;
+    }
+  }
+
+  void handleNotificationTap() {
+    debugPrint("Successfully returned back to the app");
   }
 
   void onStepCount(StepCount event) {
@@ -74,9 +117,12 @@ class _WalkingWorkoutPageState extends State<WalkingWorkoutPage> {
   void startWalking() {
     setState(() {
       _isWalking = true;
-      _isTimerVisible = true;
-      _areStepsVisible = true;
+      _isPainShowing = true;
+      _isResting = false;
       _isStopVisible = true;
+      _areStepsVisible = true;
+      _isTimerVisible = true;
+      startTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
     });
 
     _stepCountStream = Pedometer.stepCountStream;
@@ -88,6 +134,9 @@ class _WalkingWorkoutPageState extends State<WalkingWorkoutPage> {
     }).onError(onStepCountError);
 
     startTimer();
+
+    NotificationService().showNotification(
+        1, "Walking Started", "You have started your walking workout.");
   }
 
   void startTimer() {
@@ -104,24 +153,33 @@ class _WalkingWorkoutPageState extends State<WalkingWorkoutPage> {
 
   void rest() {
     setState(() {
-      _isWalking = false;
+      _isResting = false;
+      _isWalking = true;
       restTimestamps
           .add(DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now()));
+      _stepCountStream.listen((event) {}).cancel();
+      // _countupTimer?.cancel();
     });
+    showPainLevelDialog();
   }
 
   void continueWalking() {
     setState(() {
       _isWalking = true;
-      _isPainButtonDisabled = false;
+      _isPainShowing = true;
+      _isResting = false;
+      continueCount++;
+      captureTimeN
+          .add(DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now()));
     });
-    startTimer();
-  }
-
-  @override
-  void dispose() {
-    _countupTimer?.cancel();
-    super.dispose();
+    _stepCountStream = Pedometer.stepCountStream; // Restart counting steps
+    _stepCountStream.listen((event) {
+      if (_initialSteps == 0) {
+        _initialSteps = event.steps;
+      }
+      onStepCount(event);
+    }).onError(onStepCountError);
+    // startTimer();
   }
 
   void showSymptomsBottomSheet() {
@@ -145,18 +203,41 @@ class _WalkingWorkoutPageState extends State<WalkingWorkoutPage> {
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: CustomTextField(
                   hintText: "Add Symptom",
-                  onChanged: (text) {},
+                  onChanged: (text) {
+                    setState(() {
+                      symptom = text;
+                    });
+                  },
                 ),
               ),
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: CustomFilledButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const MainDashboardPage()),
-                    );
+                  onPressed: () async {
+                    endTime = DateFormat('yyyy-MM-dd HH:mm:ss')
+                        .format(DateTime.now());
+                    final statusCheck = await formatAndStoreWalkingData();
+                    if (statusCheck) {
+                      debugPrint("Successful");
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content:
+                              const Text('Walking Data saved Successfully!'),
+                          duration: const Duration(seconds: 4),
+                        ),
+                      );
+                      Navigator.pushNamed(context, '/mainDashboard');
+                    } else {
+                      debugPrint("Failed");
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: const Text(
+                              'Faced an error saving data. Try again later!'),
+                          duration: const Duration(seconds: 4),
+                        ),
+                      );
+                      Navigator.pushNamed(context, '/mainDashboard');
+                    }
                   },
                   buttonColor: Theme.of(context).primaryColorLight,
                   child: const Text('Submit'),
@@ -166,12 +247,46 @@ class _WalkingWorkoutPageState extends State<WalkingWorkoutPage> {
           ),
         );
       },
-    ).then((value) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const MainDashboardPage()),
-      );
+    );
+  }
+
+  Future<bool> formatAndStoreWalkingData() async {
+    String painLevelsStr = painLevels.join(',');
+    String claudicationStr = claudication.join(',');
+    String restTimestampsStr = restTimestamps.join(',');
+    String captureTimeNStr = captureTimeN.join((','));
+    final userDataProvider =
+        Provider.of<UserDataProvider>(context, listen: false);
+    final username = userDataProvider.phone;
+    if (symptom.isEmpty) {
+      setState(() {
+        symptom = "Incomplete";
+      });
+    }
+    if (username != null) {
+      Map<String, String> walkingData = {
+        "username": username,
+        "N": continueCount.toString(),
+        "total_steps": _steps,
+        "symptoms": symptom,
+        "pain_level": painLevelsStr,
+        "capturetimeN": captureTimeNStr,
+        "start_time": startTime ?? "",
+        "end_time": endTime ?? "",
+        "claudication": claudicationStr,
+        "rest_time": restTimestampsStr,
+      };
+      return await context.read<UserDataProvider>().walkingData(walkingData);
+    }
+    return false;
+  }
+
+  void logPain() {
+    setState(() {
+      _isPainShowing = false;
+      _isResting = true;
     });
+    claudication.add(DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now()));
   }
 
   void showPainLevelDialog() {
@@ -179,38 +294,43 @@ class _WalkingWorkoutPageState extends State<WalkingWorkoutPage> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Pain Level'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Please select your pain level (0-10):'),
-              Slider(
-                value: painLevel.toDouble(),
-                min: 0,
-                max: 10,
-                divisions: 10,
-                label: painLevel.toString(),
-                onChanged: (double value) {
-                  setState(() {
-                    painLevel = value.toInt();
-                  });
-                },
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setState) {
+            return AlertDialog(
+              title: const Text('Pain Level'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Please select your pain level (0-10):'),
+                  Slider(
+                    value: painLevel.toDouble(),
+                    min: 0,
+                    max: 10,
+                    divisions: 10,
+                    label: painLevel.toString(),
+                    onChanged: (double value) {
+                      setState(() {
+                        painLevel = value.toInt();
+                      });
+                    },
+                  ),
+                ],
               ),
-            ],
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  painLevels.add(painLevel);
-                  _isPainButtonDisabled = true;
-                });
-                Navigator.of(context).pop();
-              },
-              child: const Text('Submit'),
-            ),
-          ],
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      painLevels.add(painLevel);
+                      claudication.add(DateFormat('yyyy-MM-dd HH:mm:ss')
+                          .format(DateTime.now()));
+                    });
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text('Submit'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -257,11 +377,19 @@ class _WalkingWorkoutPageState extends State<WalkingWorkoutPage> {
                     ),
                   ),
                 ),
-              const SizedBox(height: 100),
+              const SizedBox(height: 75),
               CustomFilledButton(
-                onPressed: _isWalking
-                    ? rest
-                    : (_elapsedTime > 0 ? continueWalking : startWalking),
+                onPressed: () {
+                  if (!_isWalking) {
+                    startWalking();
+                  } else if (_isPainShowing) {
+                    logPain();
+                  } else if (_isResting) {
+                    rest();
+                  } else {
+                    continueWalking();
+                  }
+                },
                 width: 150,
                 height: 150,
                 buttonColor: const Color(0xFF554EEB),
@@ -271,16 +399,28 @@ class _WalkingWorkoutPageState extends State<WalkingWorkoutPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(_isWalking ? Icons.pause : Icons.directions_walk,
-                          size: 50),
-                      Text(_isWalking
-                          ? "Rest"
-                          : (_elapsedTime > 0 ? "Continue" : "Start Walking")),
+                      Icon(
+                        _isPainShowing
+                            ? Icons.healing_outlined
+                            : _isResting
+                                ? Icons.pause
+                                : Icons.directions_walk,
+                        size: 50,
+                      ),
+                      Text(
+                          !_isWalking
+                              ? "Start Walking"
+                              : _isPainShowing
+                                  ? "Pain?"
+                                  : _isResting
+                                      ? "Rest"
+                                      : "Continue",
+                          style: const TextStyle(fontSize: 15)),
                     ],
                   ),
                 ),
               ),
-              const SizedBox(height: 100),
+              const SizedBox(height: 75),
               if (_areStepsVisible)
                 SizedBox(
                   width: 200,
@@ -306,36 +446,11 @@ class _WalkingWorkoutPageState extends State<WalkingWorkoutPage> {
                     ),
                   ),
                 ),
-              const SizedBox(height: 100),
+              const SizedBox(height: 75),
               if (_isStopVisible)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    CustomFilledButton(
-                      onPressed: _isPainButtonDisabled
-                          ? null
-                          : () {
-                              showPainLevelDialog();
-                            },
-                      width: 150,
-                      height: 150,
-                      buttonColor: const Color(0xFF554EEB),
-                      borderRadius: BorderRadius.circular(60),
-                      child: const Padding(
-                        padding: EdgeInsets.only(bottom: 15.0),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Center(
-                              child: Text(
-                                "Pain?",
-                                style: TextStyle(fontSize: 20),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
                     CustomFilledButton(
                       onPressed: showSymptomsBottomSheet,
                       width: 150,

@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:walking_track/providers/user_data_provider.dart';
-import 'package:walking_track/screens/preview_dashboard.dart';
-import 'package:walking_track/screens/sign_in.dart';
-import 'package:walking_track/screens/walking_workout.dart';
-import 'package:walking_track/screens/change_password.dart';
+import 'package:walking_track/services/api_service.dart';
 import 'package:walking_track/shared/filled_button.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:walking_track/shared/text_field.dart';
-import 'package:walking_track/utils/validators.dart';
+import 'package:walking_track/shared/left_menu.dart';
+import 'package:walking_track/shared/notificationservice.dart';
+import 'package:walking_track/shared/right_menu.dart';
 
 class MainDashboardPage extends StatefulWidget {
   const MainDashboardPage({super.key});
@@ -18,47 +16,39 @@ class MainDashboardPage extends StatefulWidget {
 }
 
 class _MainDashboardPageState extends State<MainDashboardPage> {
-  String passwordText = '';
-  String confirmPasswordText = '';
+  final NotificationService _notificationService = NotificationService();
+  bool isSixMinuteEnabled = false;
+  bool isConnected = true;
 
-  void _showLeftMenu() {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.directions_walk),
-              title: const Text('6 Minute Walking Test'),
-              onTap: () {
-                Navigator.pop(context);
-                // Navigate to 6 Minute Walking Test
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.dashboard),
-              title: const Text('Dashboard'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const MainDashboardPage()),
-                );
-                // Navigate to Dashboard
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.help),
-              title: const Text('Help'),
-              onTap: () => _launchUrl(Uri.parse(
-                  'https://www.facebook.com/groups/3350980051814826/?ref=share&mibextid=NSMWBT')),
-              // Navigate to Help
-            ),
-          ],
-        );
-      },
-    );
+  @override
+  void initState() {
+    super.initState();
+    checkSixMinuteEnabled();
+    checkConnection();
+  }
+
+  Future<void> checkConnection() async {
+    isConnected = await context.read<UserDataProvider>().isConnected();
+  }
+
+  Future<void> checkSixMinuteEnabled() async {
+    ApiService apiService = ApiService();
+    final userDataProvider =
+        Provider.of<UserDataProvider>(context, listen: false);
+    final username = userDataProvider.phone;
+    if (username != null) {
+      if (await userDataProvider.isConnected()) {
+        final response = await apiService.test6MinWalkingData(username);
+        if (response.statusCode == 200) {
+          final jsonResponse = response.data;
+          bool enableStatus = jsonResponse['data']['enabled'] &&
+              jsonResponse['data']['counter'] > 0;
+          setState(() {
+            isSixMinuteEnabled = enableStatus;
+          });
+        }
+      }
+    }
   }
 
   Future<void> _launchUrl(Uri _url) async {
@@ -67,59 +57,11 @@ class _MainDashboardPageState extends State<MainDashboardPage> {
     }
   }
 
-  void _showRightMenu() {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.lock),
-              title: const Text('Change Password'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => ChangePasswordPage()),
-                );
-                // Navigate to Change Password
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.privacy_tip),
-              title: const Text('Privacy'),
-              onTap: () => _launchUrl(Uri.parse(
-                  'https://www.facebook.com/groups/3350980051814826/?ref=share&mibextid=NSMWBT')),
-              // Navigate to Privacy
-            ),
-            ListTile(
-              leading: const Icon(Icons.logout),
-              title: const Text('Log Out'),
-              onTap: () {
-                Provider.of<UserDataProvider>(context).clearAccount();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SignInPage()),
-                );
-                // Perform Log Out
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.close),
-              title: const Text('Close Account'),
-              onTap: () async {
-                await Provider.of<UserDataProvider>(context).closeAccount();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SignInPage()),
-                );
-                // Navigate to Close Account
-              },
-            ),
-          ],
-        );
-      },
-    );
+  Future<void> refreshContent() async {
+    checkSixMinuteEnabled();
+    checkConnection();
+    context.read<UserDataProvider>().syncWalkingData();
+    context.read<UserDataProvider>().reviewWalkingData();
   }
 
   @override
@@ -139,12 +81,38 @@ class _MainDashboardPageState extends State<MainDashboardPage> {
         backgroundColor: Colors.transparent,
         leading: IconButton(
           icon: const Icon(Icons.menu),
-          onPressed: _showLeftMenu,
+          onPressed: () => showLeftMenu(context, isSixMinuteEnabled),
         ),
         actions: [
+          if (!isConnected)
+            IconButton(
+              icon: const Icon(Icons.signal_wifi_bad),
+              onPressed: () async {
+                await refreshContent();
+
+                bool isConnected =
+                    await context.read<UserDataProvider>().isConnected();
+
+                if (isConnected) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('You are online now!'),
+                      duration: const Duration(seconds: 3),
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text('No internet connection!'),
+                      duration: const Duration(seconds: 3),
+                    ),
+                  );
+                }
+              },
+            ),
           IconButton(
             icon: const Icon(Icons.account_circle),
-            onPressed: _showRightMenu,
+            onPressed: () => showRightMenu(context),
           ),
         ],
       ),
@@ -156,11 +124,7 @@ class _MainDashboardPageState extends State<MainDashboardPage> {
             children: [
               CustomFilledButton(
                 onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => WalkingWorkoutPage()),
-                  );
+                  Navigator.pushNamed(context, '/walkingWorkout');
                 },
                 width: 150,
                 height: 150,
@@ -172,12 +136,18 @@ class _MainDashboardPageState extends State<MainDashboardPage> {
                 ),
               ),
               CustomFilledButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => const PreviewDashboardPage()),
-                  );
+                onPressed: () async {
+                  if (isConnected) {
+                    await context.read<UserDataProvider>().reviewWalkingData();
+                    Navigator.pushNamed(context, '/previewDashboard');
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text('Turn on Internet connection!'),
+                        duration: const Duration(seconds: 3),
+                      ),
+                    );
+                  }
                 },
                 width: 150,
                 height: 150,
@@ -190,7 +160,16 @@ class _MainDashboardPageState extends State<MainDashboardPage> {
               ),
               CustomFilledButton(
                 onPressed: () {
-                  _dialogBuilder(context);
+                  if (isConnected) {
+                    _dialogBuilder(context);
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: const Text('Turn on Internet connection!'),
+                        duration: const Duration(seconds: 3),
+                      ),
+                    );
+                  }
                 },
                 width: 150,
                 height: 150,
@@ -222,16 +201,16 @@ class _MainDashboardPageState extends State<MainDashboardPage> {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               CustomFilledButton(
-                  onPressed: () => _launchUrl(Uri.parse(
-                      'https://www.facebook.com/groups/3350980051814826/?ref=share&mibextid=NSMWBT')),
+                  onPressed: () =>
+                      _launchUrl(Uri.parse('https://walkingsupportgroup.com')),
                   buttonColor: const Color(0xFF8A73C7),
                   width: 110,
                   height: 60,
                   borderRadius: BorderRadius.circular(70),
                   child: const Text("Facebook")),
               CustomFilledButton(
-                onPressed: () => _launchUrl(Uri.parse(
-                    'https://m.me/ch/AbYJJdykvDXgZk7m/?send_source=cm%3Acopy_invite_link')),
+                onPressed: () =>
+                    _launchUrl(Uri.parse('https://m.me/ch/AbZF4gbTsLnnKYCB/')),
                 buttonColor: const Color(0xFF8A73C7),
                 width: 110,
                 height: 60,
@@ -252,70 +231,6 @@ class _MainDashboardPageState extends State<MainDashboardPage> {
               onPressed: () {
                 Navigator.pop(context);
               },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> _changePasswordDialogBuilder(BuildContext context) {
-    return showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Change Password'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CustomTextField(
-                hintText: "Password",
-                onChanged: (text) {
-                  setState(() {
-                    passwordText = text;
-                  });
-                },
-                prefixIcon: Icons.lock_outline,
-                suffixIcon: Icons.visibility_outlined,
-                isPassword: true,
-                validator: Validators.validatePasswordField,
-              ),
-              const SizedBox(height: 10),
-              CustomTextField(
-                hintText: "Confirm Password",
-                onChanged: (text) {
-                  setState(() {
-                    confirmPasswordText = text;
-                  });
-                },
-                prefixIcon: Icons.lock_outline,
-                suffixIcon: Icons.visibility_outlined,
-                isPassword: true,
-                validator: (value) {
-                  if (value != passwordText) {
-                    return 'Passwords do not match';
-                  }
-                  return Validators.validatePasswordField(value);
-                },
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                if (Validators.validatePasswordField(passwordText) == null &&
-                    passwordText == confirmPasswordText) {
-                  // Proceed with password change logic
-                  Navigator.of(context).pop();
-                }
-              },
-              child: const Text('Change Password'),
             ),
           ],
         );

@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:pedometer/pedometer.dart';
+import 'package:provider/provider.dart';
+import 'package:walking_track/providers/user_data_provider.dart';
 import 'package:walking_track/screens/main_dashboard.dart';
 import 'package:walking_track/shared/filled_button.dart';
 import 'package:walking_track/shared/text_field.dart';
@@ -14,7 +16,7 @@ class SixMinuteWalkingPage extends StatefulWidget {
 class _SixMinuteWalkingPageState extends State<SixMinuteWalkingPage> {
   late Stream<StepCount> _stepCountStream;
   late Stream<PedestrianStatus> _pedestrianStatusStream;
-  String _status = '?', _steps = '0', _timer = '00:00';
+  String _steps = '0', _timer = '00:00';
   int _initialSteps = 0;
   bool _isWalking = false, _isTimerVisible = false, _areStepsVisible = false;
   Timer? _countupTimer;
@@ -36,18 +38,6 @@ class _SixMinuteWalkingPageState extends State<SixMinuteWalkingPage> {
     });
   }
 
-  void onPedestrianStatusChanged(PedestrianStatus event) {
-    setState(() {
-      _status = event.status;
-    });
-  }
-
-  void onPedestrianStatusError(error) {
-    setState(() {
-      _status = 'Pedestrian Status not available';
-    });
-  }
-
   void onStepCountError(error) {
     setState(() {
       _steps = 'Step Count not available';
@@ -56,9 +46,6 @@ class _SixMinuteWalkingPageState extends State<SixMinuteWalkingPage> {
 
   void initPlatformState() {
     _pedestrianStatusStream = Pedometer.pedestrianStatusStream;
-    _pedestrianStatusStream
-        .listen(onPedestrianStatusChanged)
-        .onError(onPedestrianStatusError);
   }
 
   void startWalking() {
@@ -89,11 +76,11 @@ class _SixMinuteWalkingPageState extends State<SixMinuteWalkingPage> {
         _timer =
             '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
 
-        if (_elapsedTime >= 5) {
+        if (_elapsedTime >= 360) {
           // Change to 6 minutes (360 seconds)
           timer.cancel();
           _isWalking = false;
-          _endTime = DateTime.now(); // Save end time
+          _endTime = DateTime.now();
           showSymptomsBottomSheet();
         }
       });
@@ -101,10 +88,10 @@ class _SixMinuteWalkingPageState extends State<SixMinuteWalkingPage> {
   }
 
   void rest() {
-    _countupTimer?.cancel();
+    // _countupTimer?.cancel();
     setState(() {
       _isWalking = false;
-      _restTimes.add(DateTime.now()); // Save rest time
+      _restTimes.add(DateTime.now());
     });
   }
 
@@ -112,7 +99,7 @@ class _SixMinuteWalkingPageState extends State<SixMinuteWalkingPage> {
     setState(() {
       _isWalking = true;
     });
-    startTimer();
+    // startTimer();
   }
 
   @override
@@ -121,12 +108,54 @@ class _SixMinuteWalkingPageState extends State<SixMinuteWalkingPage> {
     super.dispose();
   }
 
-  void showSymptomsBottomSheet() {
+  Future<void> submitSixMinuteData() async {
     final String startTimeStr = _startTime?.toIso8601String() ?? '';
     final String endTimeStr = _endTime?.toIso8601String() ?? '';
     final String restTimesStr =
         _restTimes.map((dt) => dt.toIso8601String()).join(', ');
+    final String? userName = context.read<UserDataProvider>().phone;
+    if (symptom.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Symptom was not added!'),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+      setState(() {
+        symptom = "None";
+      });
+    }
+    if (userName != null) {
+      final Map<String, String> data = {
+        "username": userName,
+        "total_steps": _steps,
+        "symptoms": symptom,
+        "start_time": startTimeStr,
+        "end_time": endTimeStr,
+        "rest_time": restTimesStr
+      };
+      final checkStatus =
+          await context.read<UserDataProvider>().sixMinuteWalkingData(data);
+      if (checkStatus) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Data Saved Successfully'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Data Save Failed'),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+      Navigator.pushNamed(context, '/mainDashboard');
+    }
+  }
 
+  void showSymptomsBottomSheet() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -157,21 +186,8 @@ class _SixMinuteWalkingPageState extends State<SixMinuteWalkingPage> {
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: CustomFilledButton(
-                  onPressed: () {
-                    final Map<String, dynamic> data = {
-                      "username": "3135833708",
-                      "total_steps": _steps,
-                      "symptoms": symptom, // Update this based on user input
-                      "start_time": startTimeStr,
-                      "end_time": endTimeStr,
-                      "rest_time": restTimesStr
-                    };
-                    print(data); // Print or send the data
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const MainDashboardPage()),
-                    );
+                  onPressed: () async {
+                    submitSixMinuteData();
                   },
                   buttonColor: Theme.of(context).primaryColorLight,
                   child: const Text('Submit'),
@@ -182,10 +198,7 @@ class _SixMinuteWalkingPageState extends State<SixMinuteWalkingPage> {
         );
       },
     ).then((value) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const MainDashboardPage()),
-      );
+      submitSixMinuteData();
     });
   }
 

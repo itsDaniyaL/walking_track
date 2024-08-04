@@ -1,16 +1,12 @@
-import 'dart:convert';
-
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:walking_track/providers/user_data_provider.dart';
 import 'package:walking_track/screens/allow_permissions.dart';
-import 'package:walking_track/screens/preview_dashboard.dart';
 import 'package:walking_track/screens/sign_in_new_user.dart';
 import 'package:walking_track/screens/sign_up_description.dart';
-import 'package:walking_track/screens/six_minute_walking.dart';
-import 'package:walking_track/services/api_service.dart';
 import 'package:walking_track/shared/filled_button.dart';
+import 'package:walking_track/shared/notificationservice.dart';
 import 'package:walking_track/shared/text_field.dart';
 import 'package:walking_track/utils/validators.dart';
 
@@ -24,24 +20,22 @@ class SignInPage extends StatefulWidget {
 class _SignInPageState extends State<SignInPage> {
   late String userNameText = "";
   late String passwordText = "";
+  late bool loading = false;
 
   bool validateForm() {
     return Validators.validatorUserName(userNameText) &&
         Validators.validatorPassword(passwordText);
   }
 
-  Future<bool> checkNewUser(BuildContext context) async {
+  bool checkNewUser(BuildContext context) {
     try {
       final userDataProvider =
           Provider.of<UserDataProvider>(context, listen: false);
-      print("Checking again");
-      await userDataProvider.signIn(userNameText, passwordText);
       final passwordChanged = userDataProvider.passwordChanged;
-      print("Checking");
-      print(passwordChanged);
+      debugPrint(passwordChanged);
       return passwordChanged == "1";
     } catch (e) {
-      print('Error during sign in: $e');
+      debugPrint('Error during sign in: $e');
     }
     return false;
   }
@@ -112,45 +106,75 @@ class _SignInPageState extends State<SignInPage> {
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   CustomFilledButton(
-                    onPressed: validateForm()
+                    onPressed: validateForm() && !loading
                         ? () async {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) =>
-                                      const AllowPermissionsPage()),
+                            setState(() {
+                              loading = true;
+                            });
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: const Text('Loading...'),
+                                duration: const Duration(seconds: 2),
+                              ),
                             );
-                            return;
-                            print("Checking");
-                            final bool isNewUser = await checkNewUser(context);
+                            bool isConnected =
+                                await checkInternetConnection(context);
+                            if (!isConnected) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content:
+                                      const Text('Turn on internet connection'),
+                                  duration: const Duration(seconds: 4),
+                                ),
+                              );
+                              setState(() {
+                                loading = false;
+                              });
+                              return;
+                            }
 
-                            PermissionStatus notificationPermission =
-                                await Permission.notification.status;
-                            PermissionStatus activityPermission =
-                                await Permission.activityRecognition.status;
-                            if (!isNewUser) {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        const SignInNewUserPage()),
-                              );
-                            } else if (notificationPermission.isGranted &&
-                                activityPermission.isGranted) {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        SixMinuteWalkingPage()),
-                              );
+                            final checkStatus = await context
+                                .read<UserDataProvider>()
+                                .signIn(userNameText, passwordText);
+                            if (checkStatus) {
+                              await NotificationService().showDailyAtSevenAM(
+                                  0,
+                                  'Daily Reminder',
+                                  'This is your daily reminder to track your steps');
+                              NotificationService().showNotification(
+                                  1,
+                                  "Reminder Alert",
+                                  "You will be receiving daily reminder at 7 A.M");
+                              final bool isNewUser = checkNewUser(context);
+                              if (!isNewUser) {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          const SignInNewUserPage(),
+                                      fullscreenDialog: true),
+                                );
+                              } else {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          AllowPermissionsPage(),
+                                      fullscreenDialog: true),
+                                );
+                              }
                             } else {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        AllowPermissionsPage()),
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: const Text(
+                                      'Sign In Failed. Please check Username and Password'),
+                                  duration: const Duration(seconds: 4),
+                                ),
                               );
                             }
+                            setState(() {
+                              loading = false;
+                            });
                           }
                         : null,
                     textColor: Theme.of(context).secondaryHeaderColor,
@@ -179,11 +203,7 @@ class _SignInPageState extends State<SignInPage> {
                 children: [
                   GestureDetector(
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const SignInPage()),
-                      );
+                      Navigator.pushNamed(context, '/signIn');
                     },
                     child: const Text(
                       "Are you a new user?",
@@ -194,12 +214,7 @@ class _SignInPageState extends State<SignInPage> {
                   ),
                   CustomFilledButton(
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) =>
-                                const SignUpDescriptionPage()),
-                      );
+                      Navigator.pushNamed(context, '/signUpDescription');
                     },
                     textColor: Theme.of(context).secondaryHeaderColor,
                     buttonColor: const Color(0xFFE1E1E1),
@@ -221,6 +236,7 @@ class _SignInPageState extends State<SignInPage> {
 
   Future<void> _forgotPasswordDialogBuilder(BuildContext context) {
     late String usernameText = '';
+    late bool loading = false;
 
     return showDialog<void>(
       context: context,
@@ -249,15 +265,24 @@ class _SignInPageState extends State<SignInPage> {
               child: const Text('Cancel'),
             ),
             CustomFilledButton(
-              onPressed: () async {
-                final changeStatus = true;
-                // await Provider.of<UserDataProvider>(context)
-                //     .forgotPassword(usernameText);
-                Navigator.of(context).pop();
-                if (changeStatus) {
-                  _showSuccessDialog(context);
-                }
-              },
+              onPressed: !loading
+                  ? () async {
+                      setState(() {
+                        loading = true;
+                      });
+                      final bool changeStatus;
+                      changeStatus = await context
+                          .read<UserDataProvider>()
+                          .forgotPassword(usernameText);
+                      Navigator.of(context).pop();
+                      if (changeStatus) {
+                        _showSuccessDialog(context);
+                      }
+                      setState(() {
+                        loading = false;
+                      });
+                    }
+                  : null,
               textColor: Theme.of(context).secondaryHeaderColor,
               buttonColor: Theme.of(context).primaryColorLight,
               child: const Text('Submit'),
@@ -286,5 +311,28 @@ class _SignInPageState extends State<SignInPage> {
         );
       },
     );
+  }
+
+  Future<bool> checkInternetConnection(BuildContext context) async {
+    var connectivityResult = await (Connectivity().checkConnectivity());
+    if (connectivityResult == ConnectivityResult.none) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('No Internet Connection'),
+          content: Text('Please ensure you are connected to the internet.'),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text('OK'),
+            ),
+          ],
+        ),
+      );
+      return false;
+    }
+    return true;
   }
 }

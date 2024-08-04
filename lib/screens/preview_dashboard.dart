@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:walking_track/models/preview_data.dart';
 import 'package:walking_track/providers/user_data_provider.dart';
-import 'package:walking_track/screens/main_dashboard.dart';
-import 'package:walking_track/screens/sign_in.dart';
-import 'package:walking_track/screens/walking_workout.dart';
-import 'package:walking_track/screens/change_password.dart';
+import 'package:walking_track/services/api_service.dart';
 import 'package:walking_track/shared/filled_button.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:walking_track/shared/left_menu.dart';
+import 'package:walking_track/shared/right_menu.dart';
 
 class PreviewDashboardPage extends StatefulWidget {
   const PreviewDashboardPage({super.key});
@@ -16,109 +15,64 @@ class PreviewDashboardPage extends StatefulWidget {
 }
 
 class _PreviewDashboardPageState extends State<PreviewDashboardPage> {
-  void _showLeftMenu() {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.directions_walk),
-              title: const Text('6 Minute Walking Test'),
-              onTap: () {
-                Navigator.pop(context);
-                // Navigate to 6 Minute Walking Test
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.dashboard),
-              title: const Text('Dashboard'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (context) => const MainDashboardPage()),
-                );
-                // Navigate to Dashboard
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.help),
-              title: const Text('Help'),
-              onTap: () => _launchUrl(Uri.parse(
-                  'https://www.facebook.com/groups/3350980051814826/?ref=share&mibextid=NSMWBT')),
-              // Navigate to Help
-            ),
-          ],
-        );
-      },
-    );
+  late PreviewData? previewData;
+  bool isSixMinuteEnabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    checkSixMinuteEnabled();
+    final userDataProvider =
+        Provider.of<UserDataProvider>(context, listen: false);
+    setState(() {
+      previewData = userDataProvider.previewData;
+    });
   }
 
-  Future<void> _launchUrl(Uri _url) async {
-    if (!await launchUrl(_url)) {
-      throw Exception('Could not launch $_url');
+  Future<void> checkSixMinuteEnabled() async {
+    ApiService apiService = ApiService();
+    final userDataProvider =
+        Provider.of<UserDataProvider>(context, listen: false);
+    final username = userDataProvider.phone;
+    if (username != null) {
+      final response = await apiService.test6MinWalkingData(username);
+      if (response.statusCode == 200) {
+        final jsonResponse = response.data;
+        setState(() {
+          isSixMinuteEnabled = jsonResponse['data']['enabled'] ?? false;
+        });
+      }
     }
-  }
-
-  void _showRightMenu() {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.lock),
-              title: const Text('Change Password'),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => ChangePasswordPage()),
-                );
-                // Navigate to Change Password
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.privacy_tip),
-              title: const Text('Privacy'),
-              onTap: () => _launchUrl(Uri.parse(
-                  'https://www.facebook.com/groups/3350980051814826/?ref=share&mibextid=NSMWBT')),
-              // Navigate to Privacy
-            ),
-            ListTile(
-              leading: const Icon(Icons.logout),
-              title: const Text('Log Out'),
-              onTap: () {
-                Provider.of<UserDataProvider>(context).clearAccount();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SignInPage()),
-                );
-                // Perform Log Out
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.close),
-              title: const Text('Close Account'),
-              onTap: () async {
-                await Provider.of<UserDataProvider>(context).closeAccount();
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const SignInPage()),
-                );
-                // Navigate to Close Account
-              },
-            ),
-          ],
-        );
-      },
-    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final List<Map<String, dynamic>> previewItems = [
+      {
+        'title': 'Claudication Time',
+        'value': previewData?.claudicationTime ?? 'N/A',
+      },
+      {
+        'title': 'Walk to Rest',
+        'value': previewData?.walkToRest ?? 'N/A',
+      },
+      {
+        'title': 'Walk no Rest',
+        'value': previewData?.walkNoRest ?? 'N/A',
+      },
+      {
+        'title': 'Time at Rest',
+        'value': previewData?.timeAtRest ?? 'N/A',
+      },
+      {
+        'title': 'Actual Walking',
+        'value': previewData?.actualWalking ?? 'N/A',
+      },
+      {
+        'title': 'Total Steps',
+        'value': previewData?.totalSteps.toString() ?? 'N/A',
+      },
+    ];
     return Scaffold(
       resizeToAvoidBottomInset: false,
       appBar: AppBar(
@@ -134,12 +88,12 @@ class _PreviewDashboardPageState extends State<PreviewDashboardPage> {
         backgroundColor: Colors.transparent,
         leading: IconButton(
           icon: const Icon(Icons.menu),
-          onPressed: _showLeftMenu,
+          onPressed: () => showLeftMenu(context, isSixMinuteEnabled),
         ),
         actions: [
           IconButton(
             icon: const Icon(Icons.account_circle),
-            onPressed: _showRightMenu,
+            onPressed: () => showRightMenu(context),
           ),
         ],
       ),
@@ -148,8 +102,11 @@ class _PreviewDashboardPageState extends State<PreviewDashboardPage> {
           height: MediaQuery.of(context).size.height * 0.80,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Row(
+            children: List.generate((previewItems.length / 2).ceil(), (index) {
+              int firstIndex = index * 2;
+              int secondIndex = firstIndex + 1;
+
+              return Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   CustomFilledButton(
@@ -158,187 +115,64 @@ class _PreviewDashboardPageState extends State<PreviewDashboardPage> {
                     height: 150,
                     buttonColor: const Color(0xFF554EEB),
                     borderRadius: BorderRadius.circular(60),
-                    child: const Column(
+                    child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          "4 min 22 sec",
-                          style: TextStyle(fontSize: 20),
+                          previewItems[firstIndex]['value'],
+                          style: const TextStyle(fontSize: 18),
+                          textAlign: TextAlign.center,
+                        ),
+                        const Divider(
+                          height: 5,
+                          thickness: 2,
+                          color: Colors.white,
                         ),
                         Text(
-                          "Caludication\nTime",
+                          previewItems[firstIndex]['title'],
                           textAlign: TextAlign.center,
                         ),
                       ],
                     ),
                   ),
-                  CustomFilledButton(
-                    onPressed: () {},
-                    width: 150,
-                    height: 150,
-                    buttonColor: const Color(0xFF554EEB),
-                    borderRadius: BorderRadius.circular(60),
-                    child: const Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "4 min 22 sec",
-                          style: TextStyle(fontSize: 20),
-                        ),
-                        Text(
-                          "Walk to Rest",
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
+                  if (secondIndex < previewItems.length)
+                    CustomFilledButton(
+                      onPressed: () {},
+                      width: 150,
+                      height: 150,
+                      buttonColor: const Color(0xFF554EEB),
+                      borderRadius: BorderRadius.circular(60),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            previewItems[secondIndex]['value'],
+                            style: const TextStyle(fontSize: 18),
+                            textAlign: TextAlign.center,
+                          ),
+                          const Divider(
+                            height: 5,
+                            thickness: 2,
+                            color: Colors.white,
+                          ),
+                          Text(
+                            previewItems[secondIndex]['title'],
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    SizedBox(
+                      width: 150,
+                      height: 150,
+                    ), // This ensures that the layout remains consistent even if there is an odd number of items
                 ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  CustomFilledButton(
-                    onPressed: () {},
-                    width: 150,
-                    height: 150,
-                    buttonColor: const Color(0xFF554EEB),
-                    borderRadius: BorderRadius.circular(60),
-                    child: const Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "4 min 22 sec",
-                          style: TextStyle(fontSize: 20),
-                        ),
-                        Text(
-                          "Walk no Rest",
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                  CustomFilledButton(
-                    onPressed: () {},
-                    width: 150,
-                    height: 150,
-                    buttonColor: const Color(0xFF554EEB),
-                    borderRadius: BorderRadius.circular(60),
-                    child: const Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "4 min 22 sec",
-                          style: TextStyle(fontSize: 20),
-                        ),
-                        Text(
-                          "Time at Rest",
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  CustomFilledButton(
-                    onPressed: () {},
-                    width: 150,
-                    height: 150,
-                    buttonColor: const Color(0xFF554EEB),
-                    borderRadius: BorderRadius.circular(60),
-                    child: const Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "4 min 22 sec",
-                          style: TextStyle(fontSize: 20),
-                        ),
-                        Text(
-                          "Actual Walking",
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                  CustomFilledButton(
-                    onPressed: () {},
-                    width: 150,
-                    height: 150,
-                    buttonColor: const Color(0xFF554EEB),
-                    borderRadius: BorderRadius.circular(60),
-                    child: const Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "4 min 22 sec",
-                          style: TextStyle(fontSize: 20),
-                        ),
-                        Text(
-                          "Total Steps",
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              );
+            }),
           ),
         ),
       ),
-    );
-  }
-
-  Future<void> _dialogBuilder(BuildContext context) {
-    return showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          backgroundColor: Theme.of(context).secondaryHeaderColor,
-          title: const Text(
-            'Community Support',
-            style: TextStyle(color: Colors.black),
-          ),
-          content: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              CustomFilledButton(
-                  onPressed: () => _launchUrl(Uri.parse(
-                      'https://www.facebook.com/groups/3350980051814826/?ref=share&mibextid=NSMWBT')),
-                  buttonColor: const Color(0xFF8A73C7),
-                  width: 110,
-                  height: 60,
-                  borderRadius: BorderRadius.circular(70),
-                  child: const Text("Facebook")),
-              CustomFilledButton(
-                onPressed: () => _launchUrl(Uri.parse(
-                    'https://m.me/ch/AbYJJdykvDXgZk7m/?send_source=cm%3Acopy_invite_link')),
-                buttonColor: const Color(0xFF8A73C7),
-                width: 110,
-                height: 60,
-                borderRadius: BorderRadius.circular(70),
-                child: const Text("Chat"),
-              ),
-            ],
-          ),
-          actions: <Widget>[
-            TextButton(
-              style: TextButton.styleFrom(
-                  textStyle: Theme.of(context).textTheme.labelLarge,
-                  foregroundColor: Colors.white),
-              child: const Text(
-                'Close',
-                style: TextStyle(color: Colors.black),
-              ),
-              onPressed: () {
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        );
-      },
     );
   }
 }
